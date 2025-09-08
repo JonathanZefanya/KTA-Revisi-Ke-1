@@ -1,0 +1,140 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Models\Company;
+use App\Models\LoginActivity;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+
+class AuthController extends Controller
+{
+    public function showLoginForm()
+    {
+        return view('auth.login');
+    }
+
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        $remember = $request->boolean('remember');
+
+        if (Auth::attempt($credentials, $remember)) {
+            $request->session()->regenerate();
+            // Log activity
+            try {
+                LoginActivity::create([
+                    'user_id' => Auth::id(),
+                    'email' => $credentials['email'],
+                    'ip_address' => $request->ip(),
+                    'user_agent' => substr((string)$request->userAgent(),0,255),
+                    'logged_in_at' => now(),
+                ]);
+            } catch (\Throwable $e) {
+                // swallow logging error
+            }
+            return redirect()->intended(route('dashboard'));
+        }
+
+        return back()->withErrors([
+            'email' => 'Email atau password tidak valid.',
+        ])->onlyInput('email');
+    }
+
+    public function showRegisterForm()
+    {
+        return view('auth.register');
+    }
+
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            // Tab 1 fields
+            'bu_name' => ['required','string','max:255'],
+            'bentuk' => ['required','in:PT,CV,Koperasi'],
+            'jenis' => ['required','in:BUJKN,BUJKA,BUJKPMA'],
+            'kualifikasi' => ['required','in:Kecil / Spesialis 1,Menengah / Spesialis 2,Besar BUJKN / Spesialis 2,Besar PMA / Spesialis 2,BUJKA'],
+            'penanggung_jawab' => ['required','string','max:255'],
+            'npwp' => ['required','string','max:32'],
+            'bu_email' => ['required','email','max:255','unique:users,email'],
+            'bu_phone' => ['required','string','max:30'],
+            'postal_code' => ['nullable','string','max:10'],
+            'address' => ['required','string','max:500'],
+            'province_code' => ['required','string','max:10'],
+            'province_name' => ['required','string','max:100'],
+            'city_code' => ['required','string','max:10'],
+            'city_name' => ['required','string','max:100'],
+            'password' => ['required','confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
+
+            // Tab 2 files
+            'photo_pjbu' => ['required','image','mimes:png,jpg,jpeg','max:3072'], // 3MB
+            'npwp_bu_file' => ['required','mimetypes:application/pdf','max:10240'],
+            'nib_file' => ['required','mimetypes:application/pdf','max:10240'],
+            'ktp_pjbu_file' => ['required','mimetypes:application/pdf','max:10240'],
+            'npwp_pjbu_file' => ['required','mimetypes:application/pdf','max:10240'],
+        ], [
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'photo_pjbu.image' => 'Foto PJBU harus berupa gambar.',
+        ]);
+
+        // Create user (login uses BU email)
+        $user = User::create([
+            'name' => $data['penanggung_jawab'],
+            'email' => $data['bu_email'],
+            'password' => Hash::make($data['password']),
+        ]);
+
+        // Store files
+        $storageDir = 'uploads/company';
+        $photoPath = $request->file('photo_pjbu')->store($storageDir, 'public');
+        $npwpBuPath = $request->file('npwp_bu_file')->store($storageDir, 'public');
+        $nibPath = $request->file('nib_file')->store($storageDir, 'public');
+        $ktpPath = $request->file('ktp_pjbu_file')->store($storageDir, 'public');
+        $npwpPjbuPath = $request->file('npwp_pjbu_file')->store($storageDir, 'public');
+
+        $company = Company::create([
+            'name' => $data['bu_name'],
+            'bentuk' => $data['bentuk'],
+            'jenis' => $data['jenis'],
+            'kualifikasi' => $data['kualifikasi'],
+            'penanggung_jawab' => $data['penanggung_jawab'],
+            'npwp' => $data['npwp'],
+            'email' => $data['bu_email'],
+            'phone' => $data['bu_phone'],
+            'address' => $data['address'],
+            'postal_code' => $data['postal_code'] ?? null,
+            'province_code' => $data['province_code'],
+            'province_name' => $data['province_name'],
+            'city_code' => $data['city_code'],
+            'city_name' => $data['city_name'],
+            'photo_pjbu_path' => $photoPath,
+            'npwp_bu_path' => $npwpBuPath,
+            'nib_file_path' => $nibPath,
+            'ktp_pjbu_path' => $ktpPath,
+            'npwp_pjbu_path' => $npwpPjbuPath,
+        ]);
+
+        $company->users()->syncWithoutDetaching($user->id);
+
+        Auth::login($user);
+
+        return redirect()->route('dashboard')->with('success', 'Registrasi berhasil, selamat datang!');
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/')->with('success', 'Anda telah logout.');
+    }
+
+}

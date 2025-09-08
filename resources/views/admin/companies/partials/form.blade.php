@@ -1,0 +1,98 @@
+@php($c = $company ?? null)
+<div class="col-md-6">
+    <label class="form-label small text-dim">Nama</label>
+    <input name="name" value="{{ old('name', $c?->name) }}" class="form-control form-control-sm bg-dark border-secondary text-light" required>
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">Bentuk</label>
+    <input name="bentuk" value="{{ old('bentuk', $c?->bentuk) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">Jenis</label>
+    <select name="jenis" class="form-select form-select-sm bg-dark border-secondary text-light">
+        <option value="">-</option>
+        @foreach(['BUJKN','BUJKA','BUJKPMA'] as $j)
+            <option value="{{ $j }}" @selected(old('jenis', $c?->jenis)==$j)>{{ $j }}</option>
+        @endforeach
+    </select>
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">Kualifikasi</label>
+    <select name="kualifikasi" class="form-select form-select-sm bg-dark border-secondary text-light">
+        <option value="">-</option>
+        @foreach([
+            'Kecil / Spesialis 1',
+            'Menengah / Spesialis 2',
+            'Besar BUJKN / Spesialis 2',
+            'Besar PMA / Spesialis 2',
+            'BUJKA'
+        ] as $k)
+            <option value="{{ $k }}" @selected(old('kualifikasi', $c?->kualifikasi)==$k)>{{ $k }}</option>
+        @endforeach
+    </select>
+</div>
+<div class="col-md-6">
+    <label class="form-label small text-dim">Penanggung Jawab</label>
+    <input name="penanggung_jawab" value="{{ old('penanggung_jawab', $c?->penanggung_jawab) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">NPWP</label>
+    <input name="npwp" value="{{ old('npwp', $c?->npwp) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">Telp</label>
+    <input name="phone" value="{{ old('phone', $c?->phone) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+</div>
+<div class="col-md-6">
+    <label class="form-label small text-dim">Email</label>
+    <input type="email" name="email" value="{{ old('email', $c?->email) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+</div>
+<div class="col-md-6">
+    <label class="form-label small text-dim">Alamat</label>
+    <input name="address" value="{{ old('address', $c?->address) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">Provinsi</label>
+    <input name="province_name" value="{{ old('province_name', $c?->province_name) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">Kode Provinsi</label>
+    <input name="province_code" value="{{ old('province_code', $c?->province_code) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">Kota</label>
+    <input name="city_name" value="{{ old('city_name', $c?->city_name) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">Kode Kota</label>
+    <input name="city_code" value="{{ old('city_code', $c?->city_code) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">Kode Pos</label>
+    <input name="postal_code" value="{{ old('postal_code', $c?->postal_code) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">Foto PJBU</label>
+    <input type="file" name="photo_pjbu" class="form-control form-control-sm bg-dark border-secondary text-light">
+    @if($c && $c->photo_pjbu_path)<a target="_blank" class="small" href="{{ asset('storage/'.$c->photo_pjbu_path) }}">Lihat</a>@endif
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">NPWP BU (PDF)</label>
+    <input type="file" name="npwp_bu_file" class="form-control form-control-sm bg-dark border-secondary text-light">
+    @if($c && $c->npwp_bu_path)<a target="_blank" class="small" href="{{ asset('storage/'.$c->npwp_bu_path) }}">Lihat</a>@endif
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">NIB (PDF)</label>
+    <input type="file" name="nib_file" class="form-control form-control-sm bg-dark border-secondary text-light">
+    @if($c && $c->nib_file_path)<a target="_blank" class="small" href="{{ asset('storage/'.$c->nib_file_path) }}">Lihat</a>@endif
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">KTP PJBU (PDF)</label>
+    <input type="file" name="ktp_pjbu_file" class="form-control form-control-sm bg-dark border-secondary text-light">
+    @if($c && $c->ktp_pjbu_path)<a target="_blank" class="small" href="{{ asset('storage/'.$c->ktp_pjbu_path) }}">Lihat</a>@endif
+</div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">NPWP PJBU (PDF)</label>
+    <input type="file" name="npwp_pjbu_file" class="form-control form-control-sm bg-dark border-secondary text-light">
+    @if($c && $c->npwp_pjbu_path)<a target="_blank" class="small" href="{{ asset('storage/'.$c->npwp_pjbu_path) }}">Lihat</a>@endif
+</div>
