@@ -131,3 +131,5 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::put('/admins/{admin}', [\App\Http\Controllers\AdminAdminController::class,'update'])->name('admin.admins.update');
     Route::delete('/admins/{admin}', [\App\Http\Controllers\AdminAdminController::class,'destroy'])->name('admin.admins.destroy');
 });
+
+// Route::get('/throttle-test', fn() => 'ok')->middleware('throttle:3,1');
