@@ -9,7 +9,27 @@ class AdminInvoiceController extends Controller {
         $invoice->verified_by=$r->user('admin')->id; $invoice->verified_at=now(); $invoice->verification_note=$data['note']??null; $invoice->save();
         // Issue membership card if first successful payment and user approved
         if($invoice->status===Invoice::STATUS_PAID){
-            try{ $user=$invoice->user; if($user && $user->approved_at){ $user->issueMembershipCardIfNeeded(); } }catch(\Throwable $e){ Log::error('Issue membership card failed: '.$e->getMessage()); }
+            try{
+                $user=$invoice->user;
+                if($user && $user->approved_at){
+                    if($invoice->type==='registration'){
+                        $user->issueMembershipCardIfNeeded();
+                    } elseif($invoice->type==='renewal') {
+                        // find linked renewal and apply extension
+                        $renewal=\App\Models\KtaRenewal::where('invoice_id',$invoice->id)->first();
+                        if($renewal && !$renewal->isProcessed()){
+                            // Extend only if new_expires_at is greater
+                            $currentExp = $user->membership_card_expires_at ? \Carbon\Carbon::parse($user->membership_card_expires_at) : null;
+                            $renewalNew = $renewal->new_expires_at ? \Carbon\Carbon::parse($renewal->new_expires_at) : null;
+                            if($renewalNew && (!$currentExp || $renewalNew->gt($currentExp))){
+                                $user->forceFill(['membership_card_expires_at'=>$renewalNew])->save();
+                            }
+                            $renewal->processed_at=now();
+                            $renewal->save();
+                        }
+                    }
+                }
+            }catch(\Throwable $e){ Log::error('Process membership/renewal failed: '.$e->getMessage()); }
         }
         try{ \Illuminate\Support\Facades\Mail::to($invoice->user->email)->queue(new \App\Mail\InvoicePaymentVerified($invoice)); }catch(\Throwable $e){ Log::error('Mail verify failed: '.$e->getMessage()); }
         return back()->with('success','Invoice diverifikasi'); }

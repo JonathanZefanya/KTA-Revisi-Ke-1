@@ -11,7 +11,7 @@ class Admin extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name','email','password'
+        'name','email','password','role'
     ];
 
     protected $hidden = [
@@ -24,5 +24,15 @@ class Admin extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function isSuper(): bool
+    {
+        return $this->role === 'superadmin';
+    }
+
+    public static function superCount(): int
+    {
+        return static::where('role','superadmin')->count();
     }
 }

@@ -40,6 +40,7 @@
             @if($user->approved_at)
                 <a class="nav-link" href="{{ route('pembayaran') }}">Pembayaran</a>
                 <a class="nav-link" href="{{ route('kta') }}">KTA</a>
+                <a class="nav-link" href="{{ route('kta.renew.form') }}">Perpanjang KTA</a>
             @endif
         </nav>
         <div class="small text-secondary">&copy; {{ date('Y') }}</div>

@@ -61,6 +61,7 @@
             <a class="{{ request()->routeIs('admin.invoices.*') ? 'active' : '' }}" href="{{ route('admin.invoices.index') }}">Transaksi</a>
             <a class="{{ request()->routeIs('admin.kta.*') ? 'active' : '' }}" href="{{ route('admin.kta.index') }}">KTA</a>
             <a class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}">Pengaturan</a>
+            <a class="{{ request()->routeIs('admin.admins.*') ? 'active' : '' }}" href="{{ route('admin.admins.index') }}">Administrator</a>
         </nav>
         <div class="mt-auto small text-dim">
             <div class="mb-2">Masuk sebagai:<br><span class="text-light">{{ $admin->name }}</span></div>

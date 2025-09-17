@@ -53,6 +53,9 @@ Route::middleware(['web','auth'])->group(function () {
     Route::get('/kta/card', [\App\Http\Controllers\MembershipCardController::class,'show'])->middleware(\App\Http\Middleware\EnsureUserApproved::class)->name('kta.card');
     Route::get('/kta/pdf', [\App\Http\Controllers\MembershipCardController::class,'pdf'])->middleware(\App\Http\Middleware\EnsureUserApproved::class)->name('kta.pdf');
     Route::get('/kta/validate', [\App\Http\Controllers\MembershipCardController::class,'validateCard'])->name('kta.validate');
+    // KTA renewal
+    Route::get('/kta/renew', [\App\Http\Controllers\KtaRenewalController::class,'form'])->middleware(\App\Http\Middleware\EnsureUserApproved::class)->name('kta.renew.form');
+    Route::post('/kta/renew', [\App\Http\Controllers\KtaRenewalController::class,'submit'])->middleware(\App\Http\Middleware\EnsureUserApproved::class)->name('kta.renew.submit');
     Route::get('/invoices', [\App\Http\Controllers\InvoiceController::class,'index'])->name('invoices.index');
     Route::get('/invoices/{invoice}', [\App\Http\Controllers\InvoiceController::class,'show'])->name('invoices.show');
     Route::get('/invoices/{invoice}/pdf', [\App\Http\Controllers\InvoiceController::class,'downloadPdf'])->name('invoices.pdf');
@@ -115,4 +118,12 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::get('/kta', [\App\Http\Controllers\AdminKtaController::class,'index'])->name('admin.kta.index');
     Route::get('/kta/{user}', [\App\Http\Controllers\AdminKtaController::class,'show'])->name('admin.kta.show');
     Route::get('/kta/{user}/pdf', [\App\Http\Controllers\AdminKtaController::class,'pdf'])->name('admin.kta.pdf');
+
+    // Admin management (manage fellow admins)
+    Route::get('/admins', [\App\Http\Controllers\AdminAdminController::class,'index'])->name('admin.admins.index');
+    Route::post('/admins', [\App\Http\Controllers\AdminAdminController::class,'store'])->name('admin.admins.store');
+    Route::get('/admins/create', [\App\Http\Controllers\AdminAdminController::class,'create'])->name('admin.admins.create');
+    Route::get('/admins/{admin}/edit', [\App\Http\Controllers\AdminAdminController::class,'edit'])->name('admin.admins.edit');
+    Route::put('/admins/{admin}', [\App\Http\Controllers\AdminAdminController::class,'update'])->name('admin.admins.update');
+    Route::delete('/admins/{admin}', [\App\Http\Controllers\AdminAdminController::class,'destroy'])->name('admin.admins.destroy');
 });
