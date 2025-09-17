@@ -7,7 +7,7 @@
         <div>
             <h5 class="mb-1">{{ $user->name }}</h5>
             <div class="small text-dim">Email: <span class="text-light">{{ $user->email }}</span></div>
-            <div class="small text-dim">Telp: <span class="text-light">{{ $user->phone ?? '-' }}</span></div>
+            <div class="small text-dim">Telp: <span class="text-light">{{ $user->company_phone ?? '-' }}</span></div>
             
             <div class="small text-dim">Status: @if($user->approved_at)<span class="badge bg-success">Approved</span>@else<span class="badge bg-warning text-dark">Pending</span>@endif</div>
         </div>

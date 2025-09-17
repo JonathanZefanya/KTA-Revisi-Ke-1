@@ -23,7 +23,15 @@
         .floating-shape:before{content:'';position:absolute;width:480px;height:480px;background:radial-gradient(circle at 30% 30%,rgba(13,110,253,.18),transparent 70%);top:-120px;left:-120px;filter:blur(10px);} 
         .floating-shape:after{content:'';position:absolute;width:380px;height:380px;background:radial-gradient(circle at 70% 70%,rgba(32,201,151,.18),transparent 70%);bottom:-120px;right:-100px;filter:blur(12px);} 
         @media (max-width:575.98px){.card{border-radius:22px;} .auth-side{display:none;}}
+    /* Cropper modal tweaks (portrait 3:4) */
+        .cropper-modal-backdrop{background:rgba(15,23,42,.6)!important;backdrop-filter:blur(3px);}        
+        .cropper-container{font-family:inherit;}
+        .cropper-view-box, .cropper-face{border-radius:10px;}
+        .modal-crop .modal-content{border-radius:22px;overflow:hidden;}
+        .preview-box{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:.5rem;}
+    .preview-box .preview{overflow:hidden;width:160px;aspect-ratio:3/4;height:auto;max-height:215px;border-radius:10px;background:#f1f5f9;}
     </style>
+    <link  href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet" />
 </head>
 <body>
 <div class="auth-wrapper">
@@ -165,8 +173,10 @@
                                 </div>
                                 <div class="tab-pane fade" id="pane-files" role="tabpanel">
                                     <div class="mb-3">
-                                        <label class="form-label small fw-medium">Photo PJBU (PNG/JPG/JPEG max 3MB)</label>
-                                        <input type="file" name="photo_pjbu" accept="image/png,image/jpeg" class="form-control" required>
+                                        <label class="form-label small fw-medium">Photo PJBU (PNG/JPG/JPEG max 3MB) <span class="text-secondary">(Rasio wajib 3:4)</span></label>
+                                        <input type="file" name="photo_pjbu" id="photoPjbuInput" accept="image/png,image/jpeg" class="form-control" required data-requires-crop>
+                                        <div class="form-text small">Pilih foto kemudian lakukan crop sesuai bingkai 3:4 (portrait).</div>
+                                        <input type="hidden" name="photo_pjbu_cropped" id="photoPjbuCroppedMeta" value=""> <!-- optional meta -->
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-medium">NPWP BU (PDF max 10MB)</label>
@@ -212,6 +222,56 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+<!-- Crop Modal -->
+<div class="modal fade modal-crop" id="cropperModal" tabindex="-1" aria-hidden="true" aria-labelledby="cropperModalLabel">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title fw-semibold" id="cropperModalLabel">Crop Foto PJBU (3 : 4)</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <div class="row g-4">
+                        <div class="col-md-8">
+                                <div class="bg-light rounded-4 overflow-hidden position-relative" style="min-height:320px;aspect-ratio:3/4;">
+                                        <img id="cropImage" alt="Crop preview" class="w-100 h-100" style="object-fit:contain;">
+                                        <div class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events:none;">
+                                            <div style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);">
+                                                @for($i=0;$i<12;$i++)
+                                                    <div style="border:1px solid rgba(255,255,255,.35);mix-blend-mode:overlay;"></div>
+                                                @endfor
+                                            </div>
+                                            <div style="position:absolute;left:50%;top:50%;width:55%;height:55%;transform:translate(-50%,-50%);border:2px dashed rgba(255,255,255,.55);border-radius:18px;mix-blend-mode:overlay;"></div>
+                                        </div>
+                                </div>
+                        </div>
+                        <div class="col-md-4">
+                                <div class="preview-box mb-3">
+                                        <div class="small fw-semibold mb-2">Pratinjau (3:4)</div>
+                                        <div class="preview" id="cropPreview"></div>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="rotateLeft">Rotate -90°</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="rotateRight">Rotate +90°</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="resetCrop">Reset</button>
+                                </div>
+                                <div class="small text-secondary mb-2">Pastikan wajah / objek utama berada di tengah.</div>
+                        </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div class="small text-secondary" id="cropInfo">&nbsp;</div>
+                        <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="button" id="applyCrop" class="btn btn-brand">Simpan Crop</button>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
 // Tabs navigation buttons
 document.getElementById('nextToFiles').addEventListener('click', () => {
@@ -280,6 +340,90 @@ citySelect.addEventListener('change', () => {
 });
 
 loadProvinces();
+
+// =============== Cropper Logic ===============
+(function(){
+  const fileInput = document.getElementById('photoPjbuInput');
+  const croppedMeta = document.getElementById('photoPjbuCroppedMeta');
+  const form = document.getElementById('registerForm');
+  const modalEl = document.getElementById('cropperModal');
+  const imgEl = document.getElementById('cropImage');
+  const previewEl = document.getElementById('cropPreview');
+  const infoEl = document.getElementById('cropInfo');
+  let cropper = null; let currentFile = null; let cropConfirmed = false; let modalInstance = null; 
+
+  function revoke(){ if(imgEl.dataset.blobUrl){ URL.revokeObjectURL(imgEl.dataset.blobUrl); delete imgEl.dataset.blobUrl; } }
+
+  fileInput.addEventListener('change', (e)=>{
+     const f = e.target.files?.[0]; cropConfirmed = false; croppedMeta.value='';
+     if(!f){ return; }
+     if(!/^image\//.test(f.type)){ alert('File harus gambar.'); fileInput.value=''; return; }
+     if(f.size > 3*1024*1024){ alert('Ukuran foto maksimal 3MB'); fileInput.value=''; return; }
+     currentFile = f; revoke();
+     const url = URL.createObjectURL(f); imgEl.src = url; imgEl.dataset.blobUrl = url;
+     if(!modalInstance){ modalInstance = new bootstrap.Modal(modalEl,{backdrop:'static'}); }
+     modalInstance.show();
+  });
+
+  modalEl.addEventListener('shown.bs.modal', ()=>{
+      if(cropper){ cropper.destroy(); }
+      cropper = new Cropper(imgEl, {
+         aspectRatio: 3/4,
+         viewMode: 1,
+         dragMode: 'move',
+         autoCropArea: 1,
+         preview: previewEl,
+         responsive: true,
+         background: false,
+         movable: true,
+         rotatable: true,
+         zoomOnWheel: true,
+         ready(){ updateInfo(); }
+      });
+  });
+  modalEl.addEventListener('hidden.bs.modal', ()=>{
+      if(!cropConfirmed){ // user closed without confirming => reset input
+          fileInput.value=''; revoke(); if(cropper){ cropper.destroy(); cropper=null; }
+      }
+  });
+
+  function updateInfo(){
+      if(!cropper) return; const data = cropper.getData(true); // true => rounded
+    infoEl.textContent = `Crop: ${data.width} x ${data.height}px (rasio ${(data.width/data.height).toFixed(2)})`; // target ~0.75
+  }
+
+  document.getElementById('rotateLeft').addEventListener('click', ()=>{ cropper?.rotate(-90); updateInfo(); });
+  document.getElementById('rotateRight').addEventListener('click', ()=>{ cropper?.rotate(90); updateInfo(); });
+  document.getElementById('resetCrop').addEventListener('click', ()=>{ cropper?.reset(); updateInfo(); });
+
+  document.getElementById('applyCrop').addEventListener('click', ()=>{
+      if(!cropper) return;
+    // Export to canvas with a target size preserving 3:4; choose 600x800 for good portrait quality
+    const canvas = cropper.getCroppedCanvas({ width: 600, height: 800, fillColor:'#fff' });
+      canvas.toBlob(blob => {
+          if(!blob){ alert('Gagal membuat gambar.'); return; }
+          const fileName = currentFile ? currentFile.name.replace(/\.(\w+)$/,'-cropped.$1') : 'foto-pjbu-cropped.jpg';
+          const croppedFile = new File([blob], fileName, { type: blob.type });
+          // Replace file input's FileList using DataTransfer
+          const dt = new DataTransfer(); dt.items.add(croppedFile); fileInput.files = dt.files;
+          croppedMeta.value = '1';
+          cropConfirmed = true;
+          modalInstance.hide();
+          revoke(); if(cropper){ cropper.destroy(); cropper=null; }
+      }, 'image/jpeg', 0.9);
+  });
+
+  // Prevent submit if user selected file but not confirmed crop
+  form.addEventListener('submit', (e)=>{
+      const requires = fileInput.hasAttribute('data-requires-crop');
+      if(requires && fileInput.files.length && !cropConfirmed){
+          e.preventDefault(); e.stopPropagation();
+          alert('Mohon lakukan crop foto PJBU terlebih dahulu.');
+          if(!modalInstance){ modalInstance = new bootstrap.Modal(modalEl,{backdrop:'static'}); }
+          modalInstance.show();
+      }
+  });
+})();
 </script>
 </body>
 </html>

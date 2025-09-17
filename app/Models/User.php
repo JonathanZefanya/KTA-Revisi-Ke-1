@@ -103,4 +103,15 @@ class User extends Authenticatable
         return $month.'/'.str_pad($count,3,'0',STR_PAD_LEFT).'/AB';
     }
 
+    /**
+     * Accessor: first related company phone (primary business phone).
+     * Falls back to null if no company or phone set.
+     */
+    public function getCompanyPhoneAttribute(): ?string
+    {
+        // Use loaded relation to avoid N+1; otherwise query the first company.
+        $company = $this->relationLoaded('companies') ? $this->companies->first() : $this->companies()->first();
+        return $company?->phone;
+    }
+
 }

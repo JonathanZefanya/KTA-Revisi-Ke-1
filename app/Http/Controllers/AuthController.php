@@ -8,6 +8,7 @@ use App\Models\LoginActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -92,9 +93,46 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        // Store files
+        // Validate image ratio ~3:4 server-side & create thumbnail using GD (no external package)
+        $photoFile = $request->file('photo_pjbu');
+        $photoContents = @file_get_contents($photoFile->getRealPath());
+        if($photoContents === false){
+            return back()->withErrors(['photo_pjbu' => 'Tidak dapat membaca file foto.'])->withInput();
+        }
+        $img = @imagecreatefromstring($photoContents);
+        if(!$img){
+            return back()->withErrors(['photo_pjbu' => 'Format gambar tidak valid.'])->withInput();
+        }
+        $w = imagesx($img); $h = imagesy($img);
+        if($h === 0){ imagedestroy($img); return back()->withErrors(['photo_pjbu'=>'Gambar rusak.'])->withInput(); }
+        $ratio = $w / $h; // expect ~0.75
+        if(abs($ratio - 0.75) > 0.03){
+            imagedestroy($img);
+            return back()->withErrors(['photo_pjbu' => 'Rasio foto harus 3:4 (portrait).'])->withInput();
+        }
+        // Store original
         $storageDir = 'uploads/company';
-        $photoPath = $request->file('photo_pjbu')->store($storageDir, 'public');
+        $photoPath = $photoFile->store($storageDir, 'public');
+        // Create 300x400 thumbnail (center crop fit)
+        $thumbW = 300; $thumbH = 400; $thumbImg = imagecreatetruecolor($thumbW,$thumbH);
+        // Fill white
+        $white = imagecolorallocate($thumbImg,255,255,255); imagefill($thumbImg,0,0,$white);
+        // Calculate crop to maintain 3:4 while covering
+        $targetRatio = 0.75; // w/h
+        $srcRatio = $w / $h;
+        if($srcRatio > $targetRatio){
+            // source too wide -> fit height
+            $scaledH = $thumbH; $scale = $scaledH / $h; $scaledW = (int)round($w * $scale); $sx = (int)max(0, ($scaledW - $thumbW)/2 * (1/$scale)); $sy = 0; $cropW = (int)round($thumbW / $scale); $cropH = $h;
+        } else {
+            // source too tall -> fit width
+            $scaledW = $thumbW; $scale = $scaledW / $w; $scaledH = (int)round($h * $scale); $sx = 0; $sy = (int)max(0, ($scaledH - $thumbH)/2 * (1/$scale)); $cropW = $w; $cropH = (int)round($thumbH / $scale);
+        }
+        imagecopyresampled($thumbImg,$img,0,0,$sx,$sy,$thumbW,$thumbH,$cropW,$cropH);
+        ob_start(); imagejpeg($thumbImg,null,85); $thumbData = ob_get_clean();
+        imagedestroy($img); imagedestroy($thumbImg);
+        $thumbName = pathinfo($photoPath, PATHINFO_FILENAME).'_thumb.jpg';
+        $thumbPath = $storageDir.'/'.$thumbName;
+        Storage::disk('public')->put($thumbPath,$thumbData);
         $npwpBuPath = $request->file('npwp_bu_file')->store($storageDir, 'public');
         $nibPath = $request->file('nib_file')->store($storageDir, 'public');
         $ktpPath = $request->file('ktp_pjbu_file')->store($storageDir, 'public');
@@ -116,6 +154,7 @@ class AuthController extends Controller
             'city_code' => $data['city_code'],
             'city_name' => $data['city_name'],
             'photo_pjbu_path' => $photoPath,
+            'photo_pjbu_thumb_path' => $thumbPath,
             'npwp_bu_path' => $npwpBuPath,
             'nib_file_path' => $nibPath,
             'ktp_pjbu_path' => $ktpPath,

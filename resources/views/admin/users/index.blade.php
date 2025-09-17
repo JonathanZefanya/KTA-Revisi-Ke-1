@@ -52,7 +52,7 @@
                     <td>{{ $users->firstItem() + $i }}</td>
                     <td class="text-light">{{ $u->name }}</td>
                     <td>{{ $u->email }}</td>
-                    <td>{{ $u->phone ?? '-' }}</td>
+                    <td>{{ $u->company_phone ?? '-' }}</td>
                     <td>{{ $u->created_at?->format('d/m/Y H:i') }}</td>
                     <td>
                         @if($u->approved_at)
