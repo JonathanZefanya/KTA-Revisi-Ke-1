@@ -27,5 +27,6 @@ class Kernel extends HttpKernel
         'auth' => \App\Http\Middleware\Authenticate::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'approved' => \App\Http\Middleware\EnsureUserApproved::class,
+        'hasKta' => \App\Http\Middleware\EnsureUserHasKta::class,
     ];
 }

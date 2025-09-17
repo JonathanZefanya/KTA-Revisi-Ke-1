@@ -54,8 +54,12 @@ Route::middleware(['web','auth'])->group(function () {
     Route::get('/kta/pdf', [\App\Http\Controllers\MembershipCardController::class,'pdf'])->middleware(\App\Http\Middleware\EnsureUserApproved::class)->name('kta.pdf');
     Route::get('/kta/validate', [\App\Http\Controllers\MembershipCardController::class,'validateCard'])->name('kta.validate');
     // KTA renewal
-    Route::get('/kta/renew', [\App\Http\Controllers\KtaRenewalController::class,'form'])->middleware(\App\Http\Middleware\EnsureUserApproved::class)->name('kta.renew.form');
-    Route::post('/kta/renew', [\App\Http\Controllers\KtaRenewalController::class,'submit'])->middleware(\App\Http\Middleware\EnsureUserApproved::class)->name('kta.renew.submit');
+    Route::get('/kta/renew', [\App\Http\Controllers\KtaRenewalController::class,'form'])
+        ->middleware([\App\Http\Middleware\EnsureUserApproved::class, \App\Http\Middleware\EnsureUserHasKta::class])
+        ->name('kta.renew.form');
+    Route::post('/kta/renew', [\App\Http\Controllers\KtaRenewalController::class,'submit'])
+        ->middleware([\App\Http\Middleware\EnsureUserApproved::class, \App\Http\Middleware\EnsureUserHasKta::class])
+        ->name('kta.renew.submit');
     Route::get('/invoices', [\App\Http\Controllers\InvoiceController::class,'index'])->name('invoices.index');
     Route::get('/invoices/{invoice}', [\App\Http\Controllers\InvoiceController::class,'show'])->name('invoices.show');
     Route::get('/invoices/{invoice}/pdf', [\App\Http\Controllers\InvoiceController::class,'downloadPdf'])->name('invoices.pdf');
