@@ -12,6 +12,22 @@ class KtaRenewalController extends Controller
     public function form(Request $r)
     {
         $user = $r->user();
+        
+        // Check renewal eligibility (7 weeks before expiry)
+        if (!$user->isEligibleForRenewal()) {
+            $eligibleDate = $user->getRenewalEligibilityDate();
+            $expiryDate = $user->membership_card_expires_at ? \Carbon\Carbon::parse($user->membership_card_expires_at) : null;
+            
+            if ($eligibleDate && $expiryDate) {
+                $message = "Perpanjangan KTA baru dapat dilakukan mulai tanggal " . $eligibleDate->format('d M Y') . 
+                          " (1 minggu sebelum masa berlaku berakhir pada " . $expiryDate->format('d M Y') . ").";
+            } else {
+                $message = "Perpanjangan KTA belum dapat dilakukan saat ini.";
+            }
+            
+            return redirect()->route('kta')->with('error', $message);
+        }
+        
         $currentExpiry = $user->membership_card_expires_at ? \Carbon\Carbon::parse($user->membership_card_expires_at) : null;
         $proposed = ($currentExpiry && $currentExpiry->greaterThan(now()))
             ? $currentExpiry->clone()->addYear()
@@ -39,6 +55,22 @@ class KtaRenewalController extends Controller
         if(!$user->membership_card_number){
             return back()->with('error','Anda belum memiliki KTA untuk diperpanjang.');
         }
+        
+        // Check renewal eligibility (7 weeks before expiry)
+        if (!$user->isEligibleForRenewal()) {
+            $eligibleDate = $user->getRenewalEligibilityDate();
+            $expiryDate = $user->membership_card_expires_at ? \Carbon\Carbon::parse($user->membership_card_expires_at) : null;
+            
+            if ($eligibleDate && $expiryDate) {
+                $message = "Perpanjangan KTA baru dapat dilakukan mulai tanggal " . $eligibleDate->format('d M Y') . 
+                          " (H-7 minggu sebelum masa berlaku berakhir pada " . $expiryDate->format('d M Y') . ").";
+            } else {
+                $message = "Perpanjangan KTA belum dapat dilakukan saat ini.";
+            }
+            
+            return back()->with('error', $message);
+        }
+        
         // Prevent duplicate request if there is already a pending renewal invoice
         $existingPending = \App\Models\Invoice::where('user_id',$user->id)
             ->where('type','renewal')

@@ -72,7 +72,9 @@
               <div class="text-secondary text-uppercase fw-semibold mb-1" style="font-size:.6rem;letter-spacing:.5px;">Masa Berlaku KTA</div>
               <div class="fs-6 fw-semibold mb-0">{{ $nextExpiry? $nextExpiry->format('d M Y') : '-' }}</div>
               <div class="small mt-1">
-                  @if($nextExpiry && now()->diffInDays($nextExpiry,false)<=30)
+                  @if($user->membership_card_number && $user->isEligibleForRenewal())
+                      <x-status-badge type="info">Dapat Diperpanjang</x-status-badge>
+                  @elseif($nextExpiry && now()->diffInDays($nextExpiry,false)<=30)
                       <x-status-badge type="warning">Segera Perpanjang</x-status-badge>
                   @elseif($nextExpiry)
                       <x-status-badge type="success">Aktif</x-status-badge>

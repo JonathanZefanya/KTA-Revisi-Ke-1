@@ -1,0 +1,6 @@
+1. fix bug di user yang baru register saat mau ke menu kta
+2. perpanjangan kta baru bisa dilakukan saat H-7 Minggu sebelum jatuh tempo
+3. admin bisa menambahkan badan usaha dan user sendiri
+4. transaksi bisa di tambah oleh admin sendiri
+5. Kartu berdasarkan gambar jadi tinggal di isi nomor, pas foto dan data perusahaan
+6. Tambah Upload Akte Badan usaha di register dan NIB (Nomor Induk Berusaha)

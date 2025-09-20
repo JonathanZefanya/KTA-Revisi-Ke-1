@@ -4,6 +4,7 @@
  'warning' => 'warning',
  'danger'  => 'danger',
  'error'   => 'danger',
+ 'info'    => 'info',
  'neutral' => 'neutral'
 ])
 @php($cls = $map[$type] ?? 'neutral')

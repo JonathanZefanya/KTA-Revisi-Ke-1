@@ -10,8 +10,8 @@ use App\Http\Controllers\AdminSettingController;
 use App\Http\Controllers\MembershipCardController;
 use Illuminate\Support\Facades\Auth;
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/', action: function () {
+    return view('auth.login');
 })->name('home');
 
 // Public KTA validation page (static-like dynamic page)

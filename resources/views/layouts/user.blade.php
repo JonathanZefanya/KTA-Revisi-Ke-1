@@ -46,6 +46,7 @@
         .status-badge.success{background:#ecfdf5;color:#065f46;}
         .status-badge.warning{background:#fff7ed;color:#9a3412;}
         .status-badge.danger{background:#fef2f2;color:#991b1b;}
+        .status-badge.info{background:#eff6ff;color:#1d4ed8;}
         .status-badge.neutral{background:#f1f5f9;color:#334155;}
         .table-modern thead th {font-size:.65rem;letter-spacing:.5px;font-weight:600;color:#475569;text-transform:uppercase;border-bottom:1px solid var(--ui-border);}
         .table-modern td {font-size:.72rem;vertical-align:middle;}
@@ -93,7 +94,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/><path d="M8 14h8"/></svg>
                     <span>KTA</span>
                 </a>
-                @if(auth()->user()->membership_card_number)
+                @if(auth()->user()->membership_card_number && auth()->user()->isEligibleForRenewal())
                 <a href="{{ route('kta.renew.form') }}" class="{{ request()->routeIs('kta.renew.form') ? 'active' : '' }}" title="Perpanjangan KTA">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 0-9 9"/><path d="M21 12a9 9 0 0 1-9 9"/><path d="M7 12a5 5 0 0 1 10 0"/></svg>
                     <span>Perpanjang</span>

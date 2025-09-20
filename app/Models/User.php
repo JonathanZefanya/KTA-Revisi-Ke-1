@@ -73,6 +73,28 @@ class User extends Authenticatable
         return $this->membership_card_number && $this->membership_card_expires_at && now()->lte($this->membership_card_expires_at);
     }
 
+    public function isEligibleForRenewal(): bool
+    {
+        if (!$this->hasActiveMembershipCard()) {
+            return false;
+        }
+        
+        // Renewal eligible 7 weeks (49 days) before expiry
+        $expiryDate = \Carbon\Carbon::parse($this->membership_card_expires_at);
+        $renewalEligibleDate = $expiryDate->copy()->subWeeks(7);
+        return now()->gte($renewalEligibleDate);
+    }
+
+    public function getRenewalEligibilityDate(): ?\Carbon\Carbon
+    {
+        if (!$this->membership_card_expires_at) {
+            return null;
+        }
+        
+        $expiryDate = \Carbon\Carbon::parse($this->membership_card_expires_at);
+        return $expiryDate->copy()->subWeeks(1);
+    }
+
     public function issueMembershipCardIfNeeded(): void
     {
         if($this->hasActiveMembershipCard()) return; // still valid
