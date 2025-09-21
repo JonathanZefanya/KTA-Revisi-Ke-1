@@ -14,7 +14,7 @@ class AdminCompanyController extends Controller
 {
     public static function deleteCompanyFiles(Company $company): void
     {
-        foreach(['photo_pjbu_path','npwp_bu_path','nib_file_path','ktp_pjbu_path','npwp_pjbu_path'] as $col){
+        foreach(['photo_pjbu_path','npwp_bu_path','akte_bu_path','nib_file_path','ktp_pjbu_path','npwp_pjbu_path'] as $col){
             if($company->$col && Storage::disk('public')->exists($company->$col)){
                 Storage::disk('public')->delete($company->$col);
             }
@@ -76,6 +76,7 @@ class AdminCompanyController extends Controller
             'postal_code' => ['nullable','string','max:10'],
             'photo_pjbu' => ['nullable','image','mimes:png,jpg,jpeg','max:3072'],
             'npwp_bu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
+            'akte_bu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
             'nib_file' => ['nullable','mimetypes:application/pdf','max:10240'],
             'ktp_pjbu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
             'npwp_pjbu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
@@ -154,6 +155,7 @@ class AdminCompanyController extends Controller
             'postal_code' => ['nullable','string','max:10'],
             'photo_pjbu' => ['nullable','image','mimes:png,jpg,jpeg','max:3072'],
             'npwp_bu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
+            'akte_bu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
             'nib_file' => ['nullable','mimetypes:application/pdf','max:10240'],
             'ktp_pjbu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
             'npwp_pjbu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
@@ -195,7 +197,8 @@ class AdminCompanyController extends Controller
     {
         $files = [
             'foto-pjbu' => $company->photo_pjbu_path,
-            'npwp-bu' => $company->npwp_bu_path,
+            'npwp_bu' => $company->npwp_bu_path,
+            'akte-bu' => $company->akte_bu_path,
             'nib' => $company->nib_file_path,
             'ktp-pjbu' => $company->ktp_pjbu_path,
             'npwp-pjbu' => $company->npwp_pjbu_path,
@@ -222,6 +225,7 @@ class AdminCompanyController extends Controller
         $map = [
             'photo_pjbu' => 'photo_pjbu_path',
             'npwp_bu_file' => 'npwp_bu_path',
+            'akte_bu_file' => 'akte_bu_path',
             'nib_file' => 'nib_file_path',
             'ktp_pjbu_file' => 'ktp_pjbu_path',
             'npwp_pjbu_file' => 'npwp_pjbu_path',

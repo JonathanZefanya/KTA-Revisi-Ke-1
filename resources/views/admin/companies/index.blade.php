@@ -59,7 +59,7 @@
                 <td>{{ $c->penanggung_jawab ?? '-' }}</td>
                 <td>{{ $c->npwp ?? '-' }}</td>
                 <td class="small">
-                    @php($docs = collect(['photo_pjbu_path','npwp_bu_path','nib_file_path','ktp_pjbu_path','npwp_pjbu_path'])->filter(fn($d)=>$c->$d))
+                    @php($docs = collect(['photo_pjbu_path','npwp_bu_path','nib_file_path','akte_bu_path','ktp_pjbu_path','npwp_pjbu_path'])->filter(fn($d)=>$c->$d))
                     {{ $docs->count() }} file
                 </td>
                 <td class="text-nowrap small">

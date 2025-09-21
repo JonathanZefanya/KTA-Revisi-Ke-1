@@ -183,6 +183,10 @@
                                         <input type="file" name="npwp_bu_file" accept="application/pdf" class="form-control" required>
                                     </div>
                                     <div class="mb-3">
+                                        <label class="form-label small fw-medium">Akte Badan Usaha (PDF max 10MB)</label>
+                                        <input type="file" name="akte_bu_file" accept="application/pdf" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
                                         <label class="form-label small fw-medium">NIB (PDF max 10MB)</label>
                                         <input type="file" name="nib_file" accept="application/pdf" class="form-control" required>
                                     </div>

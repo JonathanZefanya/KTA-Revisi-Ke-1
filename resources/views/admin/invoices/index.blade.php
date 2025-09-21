@@ -14,6 +14,9 @@
             </select>
         </div>
     </form>
+    <div class="mt-2">
+        <a href="{{ route('admin.invoices.create') }}" class="btn btn-sm btn-primary">Tambah Invoice</a>
+    </div>
 </div>
 <div class="adm-card">
     <div class="table-responsive small">

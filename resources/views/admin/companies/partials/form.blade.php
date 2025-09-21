@@ -93,6 +93,11 @@
     @if($c && $c->npwp_bu_path)<a target="_blank" class="small" href="{{ asset('storage/'.$c->npwp_bu_path) }}">Lihat</a>@endif
 </div>
 <div class="col-md-3">
+    <label class="form-label small text-dim">Akte BU (PDF)</label>
+    <input type="file" name="akte_bu_file" class="form-control form-control-sm bg-dark border-secondary text-light">
+    @if($c && $c->akte_bu_path)<a target="_blank" class="small" href="{{ asset('storage/'.$c->akte_bu_path) }}">Lihat</a>@endif
+</div>
+<div class="col-md-3">
     <label class="form-label small text-dim">NIB (PDF)</label>
     <input type="file" name="nib_file" class="form-control form-control-sm bg-dark border-secondary text-light">
     @if($c && $c->nib_file_path)<a target="_blank" class="small" href="{{ asset('storage/'.$c->nib_file_path) }}">Lihat</a>@endif

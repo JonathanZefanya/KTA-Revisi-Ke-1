@@ -115,6 +115,8 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::delete('/settings/banks/{bank}', [AdminSettingController::class, 'deleteBank'])->name('admin.settings.banks.delete');
     // Admin invoice verification
     Route::get('/invoices', [\App\Http\Controllers\AdminInvoiceController::class,'index'])->name('admin.invoices.index');
+    Route::get('/invoices/create', [\App\Http\Controllers\AdminInvoiceController::class,'create'])->name('admin.invoices.create');
+    Route::post('/invoices', [\App\Http\Controllers\AdminInvoiceController::class,'store'])->name('admin.invoices.store');
     Route::get('/invoices/{invoice}', [\App\Http\Controllers\AdminInvoiceController::class,'show'])->name('admin.invoices.show');
     Route::post('/invoices/{invoice}/verify', [\App\Http\Controllers\AdminInvoiceController::class,'verify'])->name('admin.invoices.verify');
 

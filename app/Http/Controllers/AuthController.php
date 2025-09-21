@@ -78,6 +78,7 @@ class AuthController extends Controller
             // Tab 2 files
             'photo_pjbu' => ['required','image','mimes:png,jpg,jpeg','max:3072'], // 3MB
             'npwp_bu_file' => ['required','mimetypes:application/pdf','max:10240'],
+            'akte_bu_file' => ['required','mimetypes:application/pdf','max:10240'],
             'nib_file' => ['required','mimetypes:application/pdf','max:10240'],
             'ktp_pjbu_file' => ['required','mimetypes:application/pdf','max:10240'],
             'npwp_pjbu_file' => ['required','mimetypes:application/pdf','max:10240'],
@@ -133,7 +134,8 @@ class AuthController extends Controller
         $thumbName = pathinfo($photoPath, PATHINFO_FILENAME).'_thumb.jpg';
         $thumbPath = $storageDir.'/'.$thumbName;
         Storage::disk('public')->put($thumbPath,$thumbData);
-        $npwpBuPath = $request->file('npwp_bu_file')->store($storageDir, 'public');
+    $npwpBuPath = $request->file('npwp_bu_file')->store($storageDir, 'public');
+    $akteBuPath = $request->file('akte_bu_file')->store($storageDir, 'public');
         $nibPath = $request->file('nib_file')->store($storageDir, 'public');
         $ktpPath = $request->file('ktp_pjbu_file')->store($storageDir, 'public');
         $npwpPjbuPath = $request->file('npwp_pjbu_file')->store($storageDir, 'public');
@@ -156,6 +158,7 @@ class AuthController extends Controller
             'photo_pjbu_path' => $photoPath,
             'photo_pjbu_thumb_path' => $thumbPath,
             'npwp_bu_path' => $npwpBuPath,
+            'akte_bu_path' => $akteBuPath,
             'nib_file_path' => $nibPath,
             'ktp_pjbu_path' => $ktpPath,
             'npwp_pjbu_path' => $npwpPjbuPath,
