@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use ZipArchive;
@@ -50,7 +51,9 @@ class AdminCompanyController extends Controller
 
     public function create()
     {
-        return view('admin.companies.create');
+        // Limit list to recent users for selection; admins can also create a new user inline
+        $users = User::orderByDesc('created_at')->limit(100)->get(['id','name','email']);
+        return view('admin.companies.create', compact('users'));
     }
 
     public function store(Request $request)
@@ -60,6 +63,7 @@ class AdminCompanyController extends Controller
             'bentuk' => ['nullable','string','max:30'],
             'jenis' => ['nullable','string','max:30'],
             'kualifikasi' => ['nullable','string','max:30'],
+            // penanggung_jawab will be taken from selected/created user
             'penanggung_jawab' => ['nullable','string','max:255'],
             'npwp' => ['nullable','string','max:32','unique:companies,npwp'],
             'email' => ['nullable','email','max:255'],
@@ -75,15 +79,61 @@ class AdminCompanyController extends Controller
             'nib_file' => ['nullable','mimetypes:application/pdf','max:10240'],
             'ktp_pjbu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
             'npwp_pjbu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
+            // user binding/creation
+            'user_mode' => ['required','in:new,existing'],
+            'existing_user_id' => ['nullable','integer','exists:users,id'],
+            'user_name' => ['nullable','string','max:255'],
+            'user_email' => ['nullable','email','max:255','unique:users,email'],
+            'user_phone' => ['nullable','string','max:30'],
+            'user_password' => ['nullable','string','min:8','confirmed'], // expects user_password_confirmation
         ]);
+        // Resolve or create user based on mode
+        if($data['user_mode'] === 'existing'){
+            if(empty($data['existing_user_id'])){
+                return back()->withInput()->with('error','Pilih pengguna yang akan menjadi penanggung jawab.');
+            }
+            $user = User::find($data['existing_user_id']);
+        } else {
+            // Validate required fields for new user
+            $request->validate([
+                'user_name' => ['required','string','max:255'],
+                'user_email' => ['required','email','max:255','unique:users,email'],
+                'user_password' => ['required','string','min:8','confirmed'],
+            ]);
+            $user = User::create([
+                'name' => $data['user_name'],
+                'email' => $data['user_email'],
+                'phone' => $data['user_phone'] ?? null,
+                'password' => Hash::make($data['user_password']),
+            ]);
+        }
+
+        // Enforce: one user can only belong to one company
+        if($user->companies()->exists()){
+            return back()->withInput()->with('error','Pengguna ini sudah terhubung ke badan usaha lain. Satu pengguna hanya boleh memiliki satu badan usaha.');
+        }
+
+        // Prepare company payload; force PJBU name from user
         $paths = $this->storeDocs($request);
-        $company = Company::create(array_merge($data, $paths));
-        return redirect()->route('admin.companies.edit',$company)->with('success','Perusahaan dibuat');
+        $payload = array_merge($data, $paths);
+        $payload['penanggung_jawab'] = $user->name;
+        unset($payload['user_mode'],$payload['existing_user_id'],$payload['user_name'],$payload['user_email'],$payload['user_phone'],$payload['user_password'],$payload['user_password_confirmation']);
+
+        $company = Company::create($payload);
+        $company->users()->attach($user->id);
+
+        return redirect()->route('admin.companies.edit',$company)->with('success','Perusahaan dibuat dan ditautkan ke pengguna: '.$user->name);
     }
 
     public function edit(Company $company)
     {
-        return view('admin.companies.edit', compact('company'));
+        $selectedUserId = optional($company->users()->first())->id;
+        $users = User::orderByDesc('created_at')->limit(100)->get(['id','name','email']);
+        if($selectedUserId && !$users->pluck('id')->contains($selectedUserId)){
+            $current = User::where('id',$selectedUserId)->get(['id','name','email']);
+            $users = $current->concat($users); // ensure selected user is present at top
+        }
+        return view('admin.companies.edit', compact('company','users','selectedUserId'));
     }
 
     public function update(Request $request, Company $company)
@@ -93,7 +143,6 @@ class AdminCompanyController extends Controller
             'bentuk' => ['nullable','string','max:30'],
             'jenis' => ['nullable','string','max:30'],
             'kualifikasi' => ['nullable','string','max:30'],
-            'penanggung_jawab' => ['nullable','string','max:255'],
             'npwp' => ['nullable','string','max:32', Rule::unique('companies','npwp')->ignore($company->id)],
             'email' => ['nullable','email','max:255'],
             'phone' => ['nullable','string','max:30'],
@@ -108,7 +157,27 @@ class AdminCompanyController extends Controller
             'nib_file' => ['nullable','mimetypes:application/pdf','max:10240'],
             'ktp_pjbu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
             'npwp_pjbu_file' => ['nullable','mimetypes:application/pdf','max:10240'],
+            // user reassignment (edit uses existing only)
+            'existing_user_id' => ['nullable','integer','exists:users,id'],
         ]);
+        // Do not allow direct penanggung_jawab override via form; only via user reassignment
+        unset($data['penanggung_jawab']);
+
+        // Handle reassignment if a user is selected
+        if($request->filled('existing_user_id')){
+            $newUser = User::find($request->integer('existing_user_id'));
+            $currentUser = $company->users()->first();
+            if(!$currentUser || $currentUser->id !== $newUser->id){
+                // enforce: new user not linked to any other company
+                if($newUser->companies()->where('companies.id','!=',$company->id)->exists()){
+                    return back()->withInput()->with('error','Pengguna ini sudah terhubung ke badan usaha lain. Satu pengguna hanya boleh memiliki satu badan usaha.');
+                }
+                // swap relation
+                $company->users()->sync([$newUser->id]);
+                // auto set PJBU from new user
+                $data['penanggung_jawab'] = $newUser->name;
+            }
+        }
         $paths = $this->storeDocs($request, $company);
         $company->update(array_merge($data,$paths));
         return back()->with('success','Perusahaan diperbarui');

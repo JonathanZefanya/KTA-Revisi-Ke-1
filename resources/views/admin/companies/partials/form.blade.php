@@ -5,7 +5,12 @@
 </div>
 <div class="col-md-3">
     <label class="form-label small text-dim">Bentuk</label>
-    <input name="bentuk" value="{{ old('bentuk', $c?->bentuk) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+    <select name="bentuk" class="form-select form-select-sm bg-dark border-secondary text-light" required>
+        <option value="">Pilih</option>
+        @foreach(['PT','CV','Koperasi'] as $b)
+            <option value="{{ $b }}" @selected(old('bentuk', $c?->bentuk)==$b)>{{ $b }}</option>
+        @endforeach
+    </select>
 </div>
 <div class="col-md-3">
     <label class="form-label small text-dim">Jenis</label>
@@ -33,11 +38,18 @@
 </div>
 <div class="col-md-6">
     <label class="form-label small text-dim">Penanggung Jawab</label>
-    <input name="penanggung_jawab" value="{{ old('penanggung_jawab', $c?->penanggung_jawab) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+    @if(!$c)
+        <input name="penanggung_jawab" value="{{ old('penanggung_jawab', $c?->penanggung_jawab) }}" class="form-control form-control-sm bg-dark border-secondary text-light" placeholder="Otomatis dari pengguna terpilih" readonly>
+        <div class="form-text text-dim">Diisi otomatis dari pengguna yang dipilih.</div>
+    @else
+        <input name="penanggung_jawab" value="{{ old('penanggung_jawab', $c?->penanggung_jawab) }}" class="form-control form-control-sm bg-dark border-secondary text-light" readonly>
+    @endif
+    @error('penanggung_jawab')<div class="text-danger small">{{ $message }}</div>@enderror
 </div>
 <div class="col-md-3">
     <label class="form-label small text-dim">NPWP</label>
-    <input name="npwp" value="{{ old('npwp', $c?->npwp) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+    <input type="text" name="npwp" value="{{ old('npwp', $c?->npwp) }}" class="form-control form-control-sm bg-dark border-secondary text-light" placeholder="Masukkan NPWP Badan Usaha">
+    @error('npwp')<div class="text-danger small">{{ $message }}</div>@enderror
 </div>
 <div class="col-md-3">
     <label class="form-label small text-dim">Telp</label>
@@ -53,20 +65,19 @@
 </div>
 <div class="col-md-3">
     <label class="form-label small text-dim">Provinsi</label>
-    <input name="province_name" value="{{ old('province_name', $c?->province_name) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
+    <select id="admProvinceSelect" name="province_code" class="form-select form-select-sm bg-dark border-secondary text-light" data-current-code="{{ old('province_code', $c?->province_code) }}">
+        <option value="">Memuat...</option>
+    </select>
+    <input type="hidden" id="admProvinceName" name="province_name" value="{{ old('province_name', $c?->province_name) }}">
+    <div class="form-text text-dim">Pilih provinsi untuk memuat daftar kota/kabupaten.</div>
 </div>
 <div class="col-md-3">
-    <label class="form-label small text-dim">Kode Provinsi</label>
-    <input name="province_code" value="{{ old('province_code', $c?->province_code) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
-</div>
-<div class="col-md-3">
-    <label class="form-label small text-dim">Kota</label>
-    <input name="city_name" value="{{ old('city_name', $c?->city_name) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
-</div>
-<div class="col-md-3">
-    <label class="form-label small text-dim">Kode Kota</label>
-    <input name="city_code" value="{{ old('city_code', $c?->city_code) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
-</div>
+    <label class="form-label small text-dim">Kota/Kabupaten</label>
+    <select id="admCitySelect" name="city_code" class="form-select form-select-sm bg-dark border-secondary text-light" data-current-code="{{ old('city_code', $c?->city_code) }}" disabled>
+        <option value="">Pilih provinsi dulu</option>
+    </select>
+    <input type="hidden" id="admCityName" name="city_name" value="{{ old('city_name', $c?->city_name) }}">
+ </div>
 <div class="col-md-3">
     <label class="form-label small text-dim">Kode Pos</label>
     <input name="postal_code" value="{{ old('postal_code', $c?->postal_code) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
