@@ -1,6 +1,6 @@
 @php($c = $company ?? null)
 <div class="col-md-6">
-    <label class="form-label small text-dim">Nama</label>
+    <label class="form-label small text-dim">Nama BU</label>
     <input name="name" value="{{ old('name', $c?->name) }}" class="form-control form-control-sm bg-dark border-secondary text-light" required>
 </div>
 <div class="col-md-3">
