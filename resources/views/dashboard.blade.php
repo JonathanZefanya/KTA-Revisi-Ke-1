@@ -125,6 +125,7 @@
                               <div class="d-flex flex-wrap gap-1">
                                   @if($c->photo_pjbu_path)<a class="badge rounded-pill text-bg-secondary text-decoration-none" target="_blank" href="{{ asset('storage/'.$c->photo_pjbu_path) }}">Foto PJBU</a>@endif
                                   @if($c->npwp_bu_path)<a class="badge rounded-pill text-bg-secondary text-decoration-none" target="_blank" href="{{ asset('storage/'.$c->npwp_bu_path) }}">NPWP BU</a>@endif
+                                  @if($c->akte_bu_path)<a class="badge rounded-pill text-bg-secondary text-decoration-none" target="_blank" href="{{ asset('storage/'.$c->akte_bu_path) }}">AKTE BU</a>@endif
                                   @if($c->nib_file_path)<a class="badge rounded-pill text-bg-secondary text-decoration-none" target="_blank" href="{{ asset('storage/'.$c->nib_file_path) }}">NIB</a>@endif
                                   @if($c->ktp_pjbu_path)<a class="badge rounded-pill text-bg-secondary text-decoration-none" target="_blank" href="{{ asset('storage/'.$c->ktp_pjbu_path) }}">KTP PJBU</a>@endif
                                   @if($c->npwp_pjbu_path)<a class="badge rounded-pill text-bg-secondary text-decoration-none" target="_blank" href="{{ asset('storage/'.$c->npwp_pjbu_path) }}">NPWP PJBU</a>@endif

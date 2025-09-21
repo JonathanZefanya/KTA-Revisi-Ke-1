@@ -29,7 +29,7 @@
             </div>
         </form>
     </div>
-    <form method="post" action="{{ route('admin.users.bulkApprove') }}" onsubmit="return confirm('Setujui user terpilih?')">
+    <form id="bulk-approve-form" method="post" action="{{ route('admin.users.bulkApprove') }}" onsubmit="return confirm('Setujui user terpilih?')">
         @csrf
     <div class="adm-table-wrap">
         <table class="adm-table">
@@ -66,7 +66,14 @@
                         <a href="{{ route('admin.users.edit',$u) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                         <button type="button" class="btn btn-sm btn-outline-danger del-user-btn" data-user-id="{{ $u->id }}">Hapus</button>
                         @if(!$u->approved_at)
-                            <form action="{{ route('admin.users.approve',$u) }}" method="POST" class="d-inline" onsubmit="return confirm('Setujui user ini?')">@csrf <button class="btn btn-sm btn-success">Approve</button></form>
+                            <button
+                                class="btn btn-sm btn-success"
+                                formaction="{{ route('admin.users.approve',$u) }}"
+                                formmethod="POST"
+                                onclick="return confirm('Setujui user ini?')"
+                                name="_token"
+                                value="{{ csrf_token() }}"
+                            >Approve</button>
                         @endif
                     </td>
                 </tr>

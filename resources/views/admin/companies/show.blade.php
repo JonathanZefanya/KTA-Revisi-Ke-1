@@ -38,6 +38,7 @@
     <ul class="small mb-0" style="columns:2; -webkit-columns:2; -moz-columns:2;">
         <li>Foto PJBU: @if($company->photo_pjbu_path)<a target="_blank" href="{{ asset('storage/'.$company->photo_pjbu_path) }}">Lihat</a>@else<span class="text-dim">-</span>@endif</li>
         <li>NPWP BU: @if($company->npwp_bu_path)<a target="_blank" href="{{ asset('storage/'.$company->npwp_bu_path) }}">Lihat</a>@else<span class="text-dim">-</span>@endif</li>
+        <li>AKTE BU: @if($company->akte_bu_path)<a target="_blank" href="{{ asset('storage/'.$company->akte_bu_path) }}">Lihat</a>@else<span class="text-dim">-</span>@endif</li>
         <li>NIB: @if($company->nib_file_path)<a target="_blank" href="{{ asset('storage/'.$company->nib_file_path) }}">Lihat</a>@else<span class="text-dim">-</span>@endif</li>
         <li>KTP PJBU: @if($company->ktp_pjbu_path)<a target="_blank" href="{{ asset('storage/'.$company->ktp_pjbu_path) }}">Lihat</a>@else<span class="text-dim">-</span>@endif</li>
         <li>NPWP PJBU: @if($company->npwp_pjbu_path)<a target="_blank" href="{{ asset('storage/'.$company->npwp_pjbu_path) }}">Lihat</a>@else<span class="text-dim">-</span>@endif</li>
