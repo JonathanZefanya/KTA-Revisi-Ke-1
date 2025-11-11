@@ -37,7 +37,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             'Provinsi',
             'Nomor Keanggotaan',
             'Nama Badan Usaha',
-            'Nama Penanggung Jawab',
+            'Nama Pimpinan',
             'Alamat Badan Usaha',
             'Alamat Lokasi Asphalt Mixing Plant',
             'Alamat Lokasi Concrete Batching Plant',

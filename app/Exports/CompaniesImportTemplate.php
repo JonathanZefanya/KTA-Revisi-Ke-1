@@ -60,7 +60,7 @@ class CompaniesImportTemplate implements FromArray, WithHeadings, WithStyles, Wi
             'Provinsi',
             'Nomor Keanggotaan',
             'Nama Badan Usaha',
-            'Nama Penanggung Jawab',
+            'Nama Pimpinan',
             'Alamat Badan Usaha',
             'No. Telepon',
             'KTA',

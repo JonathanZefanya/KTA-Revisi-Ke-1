@@ -69,11 +69,12 @@ class CompaniesImport implements ToCollection, WithHeadingRow, WithBatchInserts,
                         }
 
                         // Data company
+                        // Support multiple column names untuk Nama Pimpinan / Penanggung Jawab
                         $companyData = [
                             'bentuk' => $row['bentuk'] ?? null,
                             'jenis' => $row['jenis'] ?? $row['jenis_bu'] ?? null,
                             'kualifikasi' => $row['kualifikasi'] ?? null,
-                            'penanggung_jawab' => $row['penanggung_jawab'] ?? $row['nama_penanggung_jawab'] ?? null,
+                            'penanggung_jawab' => $row['nama_pimpinan'] ?? $row['penanggung_jawab'] ?? $row['nama_penanggung_jawab'] ?? null,
                             'npwp' => $row['npwp'] ?? null,
                             'email' => $row['email'] ?? null,
                             'phone' => $row['telepon'] ?? $row['nomor_telepon'] ?? $row['no_telepon'] ?? null,
@@ -98,7 +99,7 @@ class CompaniesImport implements ToCollection, WithHeadingRow, WithBatchInserts,
                             $user = User::updateOrCreate(
                                 ['email' => $row['email']],
                                 [
-                                    'name' => $row['penanggung_jawab'] ?? $row['nama_penanggung_jawab'] ?? $row['nama_badan_usaha'],
+                                    'name' => $row['nama_pimpinan'] ?? $row['penanggung_jawab'] ?? $row['nama_penanggung_jawab'] ?? $row['nama_badan_usaha'],
                                     'password' => Hash::make('password123'),
                                     'approved_at' => now(),
                                     'email_verified_at' => now(),
