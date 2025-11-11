@@ -16,13 +16,17 @@
     <form method="POST" action="{{ route('admin.invoices.store') }}" class="row g-3">@csrf
         <div class="col-md-6">
             <label class="form-label small text-dim">Pengguna</label>
-            <select name="user_id" id="user_id" class="form-select form-select-sm bg-dark border-secondary text-light" required>
+            {{-- <select name="user_id" id="user_id" class="form-select form-select-sm bg-dark border-secondary text-light" required>
                 <option value="">Pilih pengguna...</option>
                 @foreach($users as $u)
                     @php($uc = $userCompanyMap[$u->id] ?? null)
                     <option value="{{ $u->id }}" data-company-id="{{ $uc }}" @selected(old('user_id')==$u->id)>{{ $u->name }} ({{ $u->email }})</option>
                 @endforeach
-            </select>
+            </select> --}}
+            <input type="text" id="user_search" class="form-control form-control-sm bg-dark border-secondary text-light" placeholder="Cari nama atau email..." autocomplete="off">
+            <input type="hidden" name="user_id" id="user_id" required>
+            <ul id="user_results" class="list-group position-absolute w-100 shadow-sm" style="z-index:1000; display:none; max-height:200px; overflow-y:auto;"></ul>
+            <div class="form-text text-dim">Ketik untuk mencari pengguna, lalu pilih dari hasil.</div>
             <div class="form-text text-dim">Saat pengguna dipilih, perusahaan akan dipilih otomatis jika ada.</div>
         </div>
         <div class="col-md-6">
@@ -122,3 +126,60 @@
     </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('user_search');
+    const resultsList = document.getElementById('user_results');
+    const userIdInput = document.getElementById('user_id');
+    const companySelect = document.getElementById('company_id');
+
+    let timeout = null;
+
+    function searchUsers(q) {
+        fetch(`{{ route('admin.users.search') }}?q=${encodeURIComponent(q)}`)
+            .then(res => res.json())
+            .then(data => {
+                resultsList.innerHTML = '';
+                if (!data.length) {
+                    resultsList.style.display = 'none';
+                    return;
+                }
+                data.forEach(u => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item list-group-item-action bg-dark text-light small';
+                    li.textContent = `${u.name} (${u.email})`;
+                    li.dataset.userId = u.id;
+                    li.dataset.companyId = u.company_id || '';
+                    li.addEventListener('click', () => {
+                        searchInput.value = `${u.name} (${u.email})`;
+                        userIdInput.value = u.id;
+                        resultsList.style.display = 'none';
+                        if (u.company_id) companySelect.value = u.company_id;
+                    });
+                    resultsList.appendChild(li);
+                });
+                resultsList.style.display = 'block';
+            });
+    }
+
+    searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim();
+        userIdInput.value = '';
+        if (timeout) clearTimeout(timeout);
+        if (q.length < 2) {
+            resultsList.style.display = 'none';
+            return;
+        }
+        timeout = setTimeout(() => searchUsers(q), 300);
+    });
+
+    document.addEventListener('click', e => {
+        if (!resultsList.contains(e.target) && e.target !== searchInput) {
+            resultsList.style.display = 'none';
+        }
+    });
+});
+</script>
+@endpush

@@ -8,9 +8,9 @@
         <div class="col-auto">
             <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nama / email / no KTA" class="form-control form-control-sm" />
         </div>
-        <div class="col-auto">
+        {{-- <div class="col-auto">
             <button class="btn btn-sm btn-primary">Cari</button>
-        </div>
+        </div> --}}
         @if(request('q'))
         <div class="col-auto"><a href="{{ route('admin.kta.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a></div>
         @endif
@@ -64,3 +64,26 @@
 </div>
 <div class="mt-3">{{ $users->links() }}</div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.querySelector('input[name="q"]');
+    if (!input) return;
+    
+    input.addEventListener('input', function() {
+        const q = this.value;
+        fetch(`{{ route('admin.kta.index') }}?q=${encodeURIComponent(q)}`)
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newTableBody = doc.querySelector('.adm-table tbody');
+                if (newTableBody) {
+                    document.querySelector('.adm-table tbody').innerHTML = newTableBody.innerHTML;
+                }
+            });
+    });
+});
+</script>
+@endpush
