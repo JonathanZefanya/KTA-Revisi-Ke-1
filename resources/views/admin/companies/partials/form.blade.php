@@ -63,6 +63,14 @@
     <label class="form-label small text-dim">Alamat</label>
     <input name="address" value="{{ old('address', $c?->address) }}" class="form-control form-control-sm bg-dark border-secondary text-light">
 </div>
+<div class="col-md-6">
+    <label class="form-label small text-dim">Alamat Lokasi Asphalt Mixing Plant <span class="text-secondary">(Opsional)</span></label>
+    <input name="asphalt_mixing_plant_address" value="{{ old('asphalt_mixing_plant_address', $c?->asphalt_mixing_plant_address) }}" class="form-control form-control-sm bg-dark border-secondary text-light" placeholder="Masukkan alamat lengkap lokasi AMP jika ada">
+</div>
+<div class="col-md-6">
+    <label class="form-label small text-dim">Alamat Lokasi Concrete Batching Plant <span class="text-secondary">(Opsional)</span></label>
+    <input name="concrete_batching_plant_address" value="{{ old('concrete_batching_plant_address', $c?->concrete_batching_plant_address) }}" class="form-control form-control-sm bg-dark border-secondary text-light" placeholder="Masukkan alamat lengkap lokasi CBP jika ada">
+</div>
 <div class="col-md-3">
     <label class="form-label small text-dim">Provinsi</label>
     <select id="admProvinceSelect" name="province_code" class="form-select form-select-sm bg-dark border-secondary text-light" data-current-code="{{ old('province_code', $c?->province_code) }}">

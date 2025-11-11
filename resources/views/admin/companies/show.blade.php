@@ -32,6 +32,18 @@
             <div class="text-dim">Alamat</div>
             <div>{{ $company->address }}</div>
         </div>
+        @if($company->asphalt_mixing_plant_address)
+        <div class="col-12">
+            <div class="text-dim">Alamat Lokasi Asphalt Mixing Plant</div>
+            <div>{{ $company->asphalt_mixing_plant_address }}</div>
+        </div>
+        @endif
+        @if($company->concrete_batching_plant_address)
+        <div class="col-12">
+            <div class="text-dim">Alamat Lokasi Concrete Batching Plant</div>
+            <div>{{ $company->concrete_batching_plant_address }}</div>
+        </div>
+        @endif
     </div>
     <hr class="border-secondary my-4">
     <h6 class="mb-2">Dokumen</h6>

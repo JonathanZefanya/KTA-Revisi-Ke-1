@@ -142,6 +142,14 @@
                                             <div class="invalid-feedback">Alamat wajib.</div>
                                         </div>
                                     </div>
+                                    <div class="mt-3">
+                                        <label class="form-label small fw-medium">Alamat Lokasi Asphalt Mixing Plant <span class="text-secondary">(Opsional)</span></label>
+                                        <input type="text" name="asphalt_mixing_plant_address" value="{{ old('asphalt_mixing_plant_address') }}" class="form-control" placeholder="Masukkan alamat lengkap lokasi AMP jika ada">
+                                    </div>
+                                    <div class="mt-3">
+                                        <label class="form-label small fw-medium">Alamat Lokasi Concrete Batching Plant <span class="text-secondary">(Opsional)</span></label>
+                                        <input type="text" name="concrete_batching_plant_address" value="{{ old('concrete_batching_plant_address') }}" class="form-control" placeholder="Masukkan alamat lengkap lokasi CBP jika ada">
+                                    </div>
                                     <div class="row g-3 mt-1">
                                         <div class="col-sm-6">
                                             <label class="form-label small fw-medium">Provinsi</label>

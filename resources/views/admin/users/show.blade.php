@@ -34,6 +34,12 @@
                 PJBU: <span class="text-light">{{ $company->penanggung_jawab }}</span><br>
                 NPWP: <span class="text-light">{{ $company->npwp }}</span><br>
                 Alamat: <span class="text-light">{{ $company->address }}</span><br>
+                @if($company->asphalt_mixing_plant_address)
+                    Lokasi Asphalt Mixing Plant: <span class="text-light">{{ $company->asphalt_mixing_plant_address }}</span><br>
+                @endif
+                @if($company->concrete_batching_plant_address)
+                    Lokasi Concrete Batching Plant: <span class="text-light">{{ $company->concrete_batching_plant_address }}</span><br>
+                @endif
                 Wilayah: <span class="text-light">{{ $company->city_name }}, {{ $company->province_name }} {{ $company->postal_code }}</span>
             </div>
             <div class="mt-3 small">
