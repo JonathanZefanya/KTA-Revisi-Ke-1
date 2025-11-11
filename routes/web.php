@@ -92,6 +92,7 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users/bulk-approve', [AdminUserController::class, 'bulkApprove'])->name('admin.users.bulkApprove');
+    Route::post('/users/bulk-delete', [AdminUserController::class, 'bulkDelete'])->name('admin.users.bulkDelete');
     Route::post('/users/{user}/approve', [AdminUserController::class, 'approve'])->name('admin.users.approve');
     Route::post('/users/{user}/generate-registration-invoice', [AdminUserController::class,'generateRegistrationInvoice'])->name('admin.users.generateRegistrationInvoice');
     Route::get('/users/export', [AdminUserController::class, 'export'])->name('admin.users.export');

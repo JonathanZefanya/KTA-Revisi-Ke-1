@@ -145,48 +145,65 @@ class CompaniesImport implements ToCollection, WithHeadingRow, WithBatchInserts,
             return;
         }
 
-        // Parse tanggal dari Excel jika ada
-        $tanggalTerbit = null;
-        $tanggalBerlaku = null;
+        // Parse tanggal dari Excel
+        // Tanggal Registrasi Terakhir = Tanggal TERBIT KTA (membership_card_issued_at)
+        // Masa Berlaku = Tanggal EXPIRED KTA (membership_card_expires_at)
+        $tanggalTerbitKta = null;
+        $tanggalExpiredKta = null;
 
-        // Coba parse tanggal terbit
-        if (isset($row['tanggal_terbit']) && !empty($row['tanggal_terbit'])) {
+        // Parse TANGGAL TERBIT KTA dari kolom "Tanggal Registrasi Terakhir"
+        // Support multiple column names untuk backward compatibility
+        $tanggalTerbitField = $row['tanggal_registrasi_terakhir'] 
+            ?? $row['tanggal_terbit'] 
+            ?? $row['tanggal_terbitdaftar'] 
+            ?? $row['tanggal_daftar'] 
+            ?? null;
+
+        if (!empty($tanggalTerbitField)) {
             try {
-                if (is_numeric($row['tanggal_terbit'])) {
-                    // Excel date serial number
-                    $tanggalTerbit = Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tanggal_terbit']));
+                if (is_numeric($tanggalTerbitField)) {
+                    // Excel date serial number (contoh: 45205 = 29 Oktober 2025)
+                    $tanggalTerbitKta = Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tanggalTerbitField));
                 } else {
-                    $tanggalTerbit = Carbon::parse($row['tanggal_terbit']);
+                    // Text date format (contoh: "29 Oktober 2025" atau "2025-10-29")
+                    $tanggalTerbitKta = Carbon::parse($tanggalTerbitField);
                 }
             } catch (\Exception $e) {
                 // Jika gagal parse, gunakan tanggal hari ini
-                $tanggalTerbit = now();
+                $tanggalTerbitKta = now();
             }
         } else {
-            $tanggalTerbit = now();
+            $tanggalTerbitKta = now();
         }
 
-        // Coba parse tanggal berlaku
-        if (isset($row['tanggal_berlaku']) && !empty($row['tanggal_berlaku'])) {
+        // Parse TANGGAL EXPIRED KTA dari kolom "Masa Berlaku"
+        // Support multiple column names untuk backward compatibility
+        $tanggalExpiredField = $row['masa_berlaku'] 
+            ?? $row['tanggal_berlaku'] 
+            ?? $row['tanggal_expired'] 
+            ?? null;
+
+        if (!empty($tanggalExpiredField)) {
             try {
-                if (is_numeric($row['tanggal_berlaku'])) {
-                    // Excel date serial number
-                    $tanggalBerlaku = Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tanggal_berlaku']));
+                if (is_numeric($tanggalExpiredField)) {
+                    // Excel date serial number (contoh: 45569 = 28 Oktober 2026)
+                    $tanggalExpiredKta = Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tanggalExpiredField));
                 } else {
-                    $tanggalBerlaku = Carbon::parse($row['tanggal_berlaku']);
+                    // Text date format (contoh: "28 Oktober 2026" atau "2026-10-28")
+                    $tanggalExpiredKta = Carbon::parse($tanggalExpiredField);
                 }
             } catch (\Exception $e) {
                 // Jika gagal parse, set 2 tahun dari tanggal terbit
-                $tanggalBerlaku = $tanggalTerbit->copy()->addYears(2);
+                $tanggalExpiredKta = $tanggalTerbitKta->copy()->addYears(2);
             }
         } else {
             // Default: 2 tahun dari tanggal terbit
-            $tanggalBerlaku = $tanggalTerbit->copy()->addYears(2);
+            $tanggalExpiredKta = $tanggalTerbitKta->copy()->addYears(2);
         }
 
         // Generate nomor KTA
-        // Format: KTA-{TAHUN}-{URUT}
-        $year = $tanggalTerbit->format('Y');
+        // Format: KTA-{TAHUN_TERBIT}-{URUT} (contoh: KTA-2025-0001)
+        $year = $tanggalTerbitKta->format('Y');
         $lastNumber = User::where('membership_card_number', 'like', "KTA-{$year}-%")
             ->orderByRaw('CAST(SUBSTRING_INDEX(membership_card_number, "-", -1) AS UNSIGNED) DESC')
             ->value('membership_card_number');
@@ -201,10 +218,12 @@ class CompaniesImport implements ToCollection, WithHeadingRow, WithBatchInserts,
         $ktaNumber = sprintf('KTA-%s-%04d', $year, $nextNumber);
 
         // Update user dengan data KTA
+        // membership_card_issued_at = Tanggal Terbit KTA (dari Tanggal Registrasi Terakhir)
+        // membership_card_expires_at = Tanggal Expired KTA (dari Masa Berlaku)
         $user->update([
             'membership_card_number' => $ktaNumber,
-            'membership_card_issued_at' => $tanggalTerbit,
-            'membership_card_expires_at' => $tanggalBerlaku,
+            'membership_card_issued_at' => $tanggalTerbitKta,
+            'membership_card_expires_at' => $tanggalExpiredKta,
         ]);
     }
 }

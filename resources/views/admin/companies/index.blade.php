@@ -119,9 +119,11 @@
                     <div class="alert alert-warning small mb-2">
                         <strong>📋 Fitur Import:</strong>
                         <ul class="mb-0 ps-3 small">
-                            <li>Kode pos akan otomatis dipisahkan dari alamat (format: alamat - kodepos)</li>
-                            <li>KTA akan otomatis di-generate untuk setiap data yang di-import</li>
-                            <li>User otomatis di-approve dan bisa langsung login dengan password: <code>password123</code></li>
+                            <li><strong>Kode pos:</strong> Otomatis dipisahkan dari alamat (format: alamat - kodepos)</li>
+                            <li><strong>KTA:</strong> Otomatis di-generate berdasarkan kolom "Tanggal Registrasi Terakhir"</li>
+                            <li><strong>Tanggal:</strong> Gunakan kolom "Tanggal Registrasi Terakhir" untuk tanggal terbit KTA dan "Masa Berlaku" untuk tanggal expired</li>
+                            <li><strong>Format tanggal:</strong> Bisa menggunakan format Excel date atau text (contoh: "29 Oktober 2025")</li>
+                            <li><strong>User:</strong> Otomatis di-approve dan bisa langsung login dengan password: <code>password123</code></li>
                         </ul>
                     </div>
                     <div class="alert alert-info small mb-0">

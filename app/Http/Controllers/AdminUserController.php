@@ -101,16 +101,38 @@ class AdminUserController extends Controller
 
     public function destroy(User $user)
     {
-        // collect companies before deleting user
-        $companies = $user->companies()->get();
-        $user->delete();
-        foreach($companies as $company){
-            if($company->users()->count() === 0){
-                AdminCompanyController::deleteCompanyFiles($company);
-                $company->delete();
+        try {
+            DB::beginTransaction();
+            
+            // 1. Delete all invoices related to this user
+            Invoice::where('user_id', $user->id)->delete();
+            
+            // 2. Collect companies before deleting user
+            $companies = $user->companies()->get();
+            
+            // 3. Detach user from companies
+            $user->companies()->detach();
+            
+            // 4. Delete the user (this will cascade delete KTA data)
+            $user->delete();
+            
+            // 5. Delete companies that have no more users
+            foreach($companies as $company){
+                if($company->users()->count() === 0){
+                    AdminCompanyController::deleteCompanyFiles($company);
+                    $company->delete();
+                }
             }
+            
+            DB::commit();
+            
+            return redirect()->route('admin.users.index')->with('success','User beserta KTA, transaksi, dan perusahaan terkait berhasil dihapus');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Delete user error: ' . $e->getMessage());
+            return redirect()->route('admin.users.index')->with('error','Gagal menghapus user: ' . $e->getMessage());
         }
-        return redirect()->route('admin.users.index')->with('success','User dihapus');
     }
 
     public function bulkApprove(Request $request)
@@ -120,6 +142,60 @@ class AdminUserController extends Controller
             User::whereIn('id',$ids)->whereNull('approved_at')->update(['approved_at'=>now(),'email_verified_at'=>now()]);
         }
         return back()->with('success','User diproses');
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        
+        if (empty($ids)) {
+            return back()->with('error', 'Tidak ada user yang dipilih');
+        }
+
+        try {
+            DB::beginTransaction();
+            
+            $deletedCount = 0;
+            foreach ($ids as $userId) {
+                $user = User::find($userId);
+                
+                if ($user) {
+                    // 1. Delete all invoices related to this user
+                    Invoice::where('user_id', $user->id)->delete();
+                    
+                    // 2. Get companies related to this user
+                    $companies = $user->companies;
+                    
+                    // 3. Detach user from companies
+                    $user->companies()->detach();
+                    
+                    // 4. Delete companies that have no more users
+                    foreach ($companies as $company) {
+                        // Check if company has any other users
+                        if ($company->users()->count() === 0) {
+                            // Delete company files
+                            AdminCompanyController::deleteCompanyFiles($company);
+                            // Delete company
+                            $company->delete();
+                        }
+                    }
+                    
+                    // 5. Delete the user (this will cascade delete KTA data)
+                    $user->delete();
+                    
+                    $deletedCount++;
+                }
+            }
+            
+            DB::commit();
+            
+            return back()->with('success', "Berhasil menghapus {$deletedCount} user beserta KTA, transaksi, dan perusahaan terkait");
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk delete users error: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menghapus user: ' . $e->getMessage());
+        }
     }
 
     public function approve(User $user)

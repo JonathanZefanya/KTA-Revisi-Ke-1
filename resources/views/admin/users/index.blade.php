@@ -92,21 +92,58 @@
     <div class="d-flex justify-content-between mt-3 small">
         <div class="d-flex gap-2">
             <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-outline-primary">Tambah</a>
-            <button class="btn btn-sm btn-success">Bulk Approve</button>
+            <button type="submit" class="btn btn-sm btn-success">Bulk Approve</button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="bulkDeleteUsers()">Bulk Delete</button>
         </div>
         <div>{{ $users->links() }}</div>
     </div>
+    </form>
+    
+    <form id="bulk-delete-form" method="POST" action="{{ route('admin.users.bulkDelete') }}" style="display:none;">
+        @csrf
     </form>
     <form id="delete-user-form" method="POST" style="display:none;">
         @csrf
         @method('DELETE')
     </form>
     <script>
-        function toggleAll(cb){document.querySelectorAll('.row-check').forEach(c=>c.checked=cb.checked);}  
+        function toggleAll(cb){document.querySelectorAll('.row-check').forEach(c=>c.checked=cb.checked);}
+        
+        function bulkDeleteUsers() {
+            const checkedBoxes = document.querySelectorAll('.row-check:checked');
+            
+            if (checkedBoxes.length === 0) {
+                alert('Pilih minimal 1 user untuk dihapus');
+                return;
+            }
+            
+            const confirmMsg = `Apakah Anda yakin ingin menghapus ${checkedBoxes.length} user?\n\n⚠️ PERHATIAN:\n` +
+                `• User yang dipilih akan dihapus\n` +
+                `• Data KTA akan dihapus\n` +
+                `• Semua transaksi/invoice akan dihapus\n` +
+                `• Perusahaan yang hanya dimiliki user ini akan dihapus\n\n` +
+                `Tindakan ini TIDAK DAPAT dibatalkan!`;
+            
+            if (confirm(confirmMsg)) {
+                const form = document.getElementById('bulk-delete-form');
+                
+                // Copy all checked IDs to bulk delete form
+                checkedBoxes.forEach(cb => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ids[]';
+                    input.value = cb.value;
+                    form.appendChild(input);
+                });
+                
+                form.submit();
+            }
+        }
+        
         document.querySelectorAll('.del-user-btn').forEach(btn=>{
             btn.addEventListener('click', function(){
                 const id = this.getAttribute('data-user-id');
-                if(confirm('Hapus user ini?')){
+                if(confirm('Hapus user ini?\n\n⚠️ Data KTA, transaksi, dan perusahaan terkait juga akan dihapus!')){
                     const f = document.getElementById('delete-user-form');
                     f.action = '/admin/users/' + id;
                     f.submit();
