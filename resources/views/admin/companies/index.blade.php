@@ -119,6 +119,7 @@
                     <div class="alert alert-warning small mb-2">
                         <strong>📋 Fitur Import:</strong>
                         <ul class="mb-0 ps-3 small">
+                            <li><strong>Email WAJIB:</strong> Setiap baris harus ada email valid (untuk mencegah data orphan)</li>
                             <li><strong>Kode pos:</strong> Otomatis dipisahkan dari alamat (format: alamat - kodepos)</li>
                             <li><strong>KTA:</strong> Otomatis di-generate berdasarkan kolom "Tanggal Registrasi Terakhir"</li>
                             <li><strong>Tanggal:</strong> Gunakan kolom "Tanggal Registrasi Terakhir" untuk tanggal terbit KTA dan "Masa Berlaku" untuk tanggal expired</li>
@@ -127,7 +128,7 @@
                         </ul>
                     </div>
                     <div class="alert alert-info small mb-0">
-                        <strong>Catatan:</strong> Jika nama badan usaha sudah ada, data akan di-update. Jika belum ada, data baru akan dibuat.
+                        <strong>Catatan:</strong> Jika nama badan usaha sudah ada, data akan di-update. Jika belum ada, data baru akan dibuat. Baris tanpa email akan dilewati.
                     </div>
                 </div>
                 <div class="modal-footer border-secondary">

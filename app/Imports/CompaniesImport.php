@@ -36,9 +36,17 @@ class CompaniesImport implements ToCollection, WithHeadingRow, WithBatchInserts,
             User::withoutEvents(function () use ($rows) {
                 foreach ($rows as $index => $row) {
                     try {
-                        // Skip jika nama badan usaha kosong
+                        // Skip jika nama badan usaha atau email kosong
+                        // Email WAJIB untuk mencegah orphan companies
                         if (empty($row['nama_badan_usaha'])) {
                             $this->skipped++;
+                            $this->errors[] = "Baris " . ($index + 2) . ": Nama Badan Usaha kosong";
+                            continue;
+                        }
+                        
+                        if (empty($row['email'])) {
+                            $this->skipped++;
+                            $this->errors[] = "Baris " . ($index + 2) . ": Email kosong (Email wajib diisi)";
                             continue;
                         }
 
