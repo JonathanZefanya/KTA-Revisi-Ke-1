@@ -44,6 +44,35 @@
         .btn-ghost:hover {color:var(--adm-text);border-color:var(--adm-accent)}
         footer.adm-footer {margin-top:3rem;padding:1.2rem 0;font-size:.7rem;color:var(--adm-text-dim)}
         .truncate {white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+        /* Pagination Dark Theme */
+        .pagination {gap:.25rem;}
+        .pagination .page-link {
+            background:var(--adm-surface);
+            border:1px solid var(--adm-border);
+            color:var(--adm-text-dim);
+            padding:.35rem .65rem;
+            font-size:.75rem;
+            border-radius:8px;
+            transition:.15s;
+            font-weight:500;
+        }
+        .pagination .page-link:hover {
+            background:var(--adm-bg-alt);
+            color:var(--adm-text);
+            border-color:var(--adm-accent);
+        }
+        .pagination .page-item.active .page-link {
+            background:linear-gradient(135deg,#1e3a8a,#1d4ed8);
+            border-color:#1d4ed8;
+            color:#fff;
+            box-shadow:0 2px 8px -2px rgba(var(--adm-accent-rgb)/0.5);
+        }
+        .pagination .page-item.disabled .page-link {
+            background:var(--adm-surface);
+            border-color:var(--adm-border);
+            color:var(--adm-text-dim);
+            opacity:.5;
+        }
         @media (max-width: 991.98px){.adm-sidebar{position:static;width:100%;flex-direction:row;flex-wrap:wrap;gap:.75rem;padding:1rem;border-radius:0 0 22px 22px;}.adm-brand{margin-bottom:0;width:100%;} main.adm-main{margin-left:0;padding:1.25rem 1.25rem 3rem;} .adm-nav{display:flex;flex-direction:row;flex-wrap:wrap;gap:.4rem;} .adm-nav a{padding:.55rem .75rem;font-size:.7rem;} .hide-mobile{display:none!important}}
     </style>
     @stack('head')

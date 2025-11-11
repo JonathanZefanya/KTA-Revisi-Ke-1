@@ -94,10 +94,14 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::post('/users/bulk-approve', [AdminUserController::class, 'bulkApprove'])->name('admin.users.bulkApprove');
     Route::post('/users/{user}/approve', [AdminUserController::class, 'approve'])->name('admin.users.approve');
     Route::post('/users/{user}/generate-registration-invoice', [AdminUserController::class,'generateRegistrationInvoice'])->name('admin.users.generateRegistrationInvoice');
+    Route::get('/users/export', [AdminUserController::class, 'export'])->name('admin.users.export');
 
     // Company management
     Route::get('/companies', [AdminCompanyController::class, 'index'])->name('admin.companies.index');
     Route::get('/companies/create', [AdminCompanyController::class, 'create'])->name('admin.companies.create');
+    Route::get('/companies/export', [AdminCompanyController::class, 'export'])->name('admin.companies.export');
+    Route::post('/companies/import', [AdminCompanyController::class, 'import'])->name('admin.companies.import');
+    Route::get('/companies/download-template', [AdminCompanyController::class, 'downloadTemplate'])->name('admin.companies.downloadTemplate');
     Route::post('/companies', [AdminCompanyController::class, 'store'])->name('admin.companies.store');
     Route::get('/companies/{company}', [AdminCompanyController::class, 'show'])->name('admin.companies.show');
     Route::get('/companies/{company}/edit', [AdminCompanyController::class, 'edit'])->name('admin.companies.edit');
@@ -119,6 +123,7 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::post('/invoices', [\App\Http\Controllers\AdminInvoiceController::class,'store'])->name('admin.invoices.store');
     Route::get('/invoices/{invoice}', [\App\Http\Controllers\AdminInvoiceController::class,'show'])->name('admin.invoices.show');
     Route::post('/invoices/{invoice}/verify', [\App\Http\Controllers\AdminInvoiceController::class,'verify'])->name('admin.invoices.verify');
+    Route::get('/invoices/export', [\App\Http\Controllers\AdminInvoiceController::class,'export'])->name('admin.invoices.export');
 
     // KTA Admin
     Route::get('/kta', [\App\Http\Controllers\AdminKtaController::class,'index'])->name('admin.kta.index');

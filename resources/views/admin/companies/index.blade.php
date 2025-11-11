@@ -32,10 +32,22 @@
                 @endforeach
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-5">
             <label class="form-label small text-dim mb-1 d-block">&nbsp;</label>
             <button class="btn btn-sm btn-primary">Filter</button>
             <a href="{{ route('admin.companies.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+            <a href="{{ route('admin.companies.export', request()->only(['q', 'jenis', 'kualifikasi'])) }}" class="btn btn-sm btn-success">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="vertical-align:middle;margin-top:-2px;">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg> Export
+            </a>
+            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#importModal">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="vertical-align:middle;margin-top:-2px;">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                </svg> Import
+            </button>
         </div>
         <div class="col-md-2 text-end small text-dim">
             Total: <span class="text-light fw-semibold">{{ number_format($companies->total()) }}</span>
@@ -76,5 +88,52 @@
 <div class="d-flex justify-content-between mt-3 small">
     <a href="{{ route('admin.companies.create') }}" class="btn btn-sm btn-outline-primary">Tambah</a>
     <div>{{ $companies->links() }}</div>
+</div>
+
+<!-- Modal Import -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-secondary">
+                <h6 class="modal-title" id="importModalLabel">Import Data Companies dari Excel</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ route('admin.companies.import') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label small mb-0">File Excel (.xlsx, .xls)</label>
+                            <a href="{{ route('admin.companies.downloadTemplate') }}" class="btn btn-sm btn-outline-primary">
+                                <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16" style="vertical-align:middle;margin-top:-2px;">
+                                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                </svg> Download Template
+                            </a>
+                        </div>
+                        <input type="file" name="file" class="form-control form-control-sm bg-dark border-secondary text-light" required accept=".xlsx,.xls">
+                        <div class="form-text text-dim small">
+                            Max 5MB. <strong>Format alamat:</strong> "Jl. Nama Jalan No. XX - KodePos" (kode pos akan otomatis dipisahkan).
+                        </div>
+                    </div>
+                    <div class="alert alert-warning small mb-2">
+                        <strong>📋 Fitur Import:</strong>
+                        <ul class="mb-0 ps-3 small">
+                            <li>Kode pos akan otomatis dipisahkan dari alamat (format: alamat - kodepos)</li>
+                            <li>KTA akan otomatis di-generate untuk setiap data yang di-import</li>
+                            <li>User otomatis di-approve dan bisa langsung login dengan password: <code>password123</code></li>
+                        </ul>
+                    </div>
+                    <div class="alert alert-info small mb-0">
+                        <strong>Catatan:</strong> Jika nama badan usaha sudah ada, data akan di-update. Jika belum ada, data baru akan dibuat.
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Upload & Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection

@@ -1,5 +1,7 @@
 <?php
 namespace App\Http\Controllers; use Illuminate\Http\Request; use App\Models\Invoice; use Illuminate\Support\Facades\Log; use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\InvoicesExport;
 class AdminInvoiceController extends Controller {
     public function index(Request $r){ $status=$r->get('status'); $q=Invoice::with('user')->latest(); if($status){ $q->where('status',$status);} $invoices=$q->paginate(40)->withQueryString(); return view('admin.invoices.index',compact('invoices','status')); }
     public function create(){
@@ -78,4 +80,16 @@ class AdminInvoiceController extends Controller {
         }
         try{ \Illuminate\Support\Facades\Mail::to($invoice->user->email)->queue(new \App\Mail\InvoicePaymentVerified($invoice)); }catch(\Throwable $e){ Log::error('Mail verify failed: '.$e->getMessage()); }
         return back()->with('success','Invoice diverifikasi'); }
+    
+    public function export(Request $request)
+    {
+        $status = $request->get('status');
+        
+        $query = Invoice::with(['user', 'user.companies'])
+            ->when($status, fn($q) => $q->where('status', $status))
+            ->latest();
+
+        $filename = 'data-invoices-' . date('Y-m-d-His') . '.xlsx';
+        return Excel::download(new InvoicesExport($query), $filename);
+    }
 }

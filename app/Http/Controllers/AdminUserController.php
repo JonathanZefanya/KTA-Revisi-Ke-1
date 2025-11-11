@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\AdminCompanyController; use App\Models\Invoice; use App\Models\PaymentRate; use Illuminate\Support\Facades\Log; use Illuminate\Support\Facades\Mail; use App\Mail\InvoiceCreated;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\UsersExport;
 
 class AdminUserController extends Controller
 {
@@ -186,5 +188,26 @@ class AdminUserController extends Controller
         ]);
         try { Mail::to($user->email)->queue(new InvoiceCreated($invoice)); } catch(\Throwable $ex){ Log::error('Mail invoice create manual failed: '.$ex->getMessage()); }
         return back()->with('success','Invoice registrasi dibuat');
+    }
+
+    public function export(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        $status = $request->get('status');
+        
+        $query = User::with(['companies'])
+            ->when($q, function($query) use ($q){
+                $query->where(function($w) use ($q){
+                    $w->where('name','like',"%$q%")
+                      ->orWhere('email','like',"%$q%")
+                      ->orWhere('phone','like',"%$q%");
+                });
+            })
+            ->when($status === 'approved', fn($q2)=>$q2->whereNotNull('approved_at'))
+            ->when($status === 'pending', fn($q2)=>$q2->whereNull('approved_at'))
+            ->latest();
+
+        $filename = 'data-users-' . date('Y-m-d-His') . '.xlsx';
+        return Excel::download(new UsersExport($query), $filename);
     }
 }

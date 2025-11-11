@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use ZipArchive;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\CompaniesExport;
+use App\Exports\CompaniesImportTemplate;
+use App\Imports\CompaniesImport;
 
 class AdminCompanyController extends Controller
 {
@@ -244,5 +248,64 @@ class AdminCompanyController extends Controller
             }
         }
         return $out;
+    }
+
+    public function export(Request $request)
+    {
+        $q = trim($request->get('q',''));
+        $jenis = $request->get('jenis');
+        $kualifikasi = $request->get('kualifikasi');
+        
+        $query = Company::query()
+            ->when($q, function($query) use ($q){
+                $query->where(function($w) use ($q){
+                    $w->where('name','like',"%$q%")
+                      ->orWhere('npwp','like',"%$q%")
+                      ->orWhere('penanggung_jawab','like',"%$q%")
+                      ->orWhere('email','like',"%$q%")
+                      ->orWhere('phone','like',"%$q%");
+                });
+            })
+            ->when($jenis, fn($x)=>$x->where('jenis',$jenis))
+            ->when($kualifikasi, fn($x)=>$x->where('kualifikasi',$kualifikasi))
+            ->latest();
+
+        $filename = 'data-companies-' . date('Y-m-d-His') . '.xlsx';
+        return Excel::download(new CompaniesExport($query), $filename);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls|max:5120', // max 5MB
+        ]);
+
+        try {
+            // Tingkatkan execution time untuk import besar
+            set_time_limit(300); // 5 menit
+            ini_set('max_execution_time', 300);
+            ini_set('memory_limit', '512M');
+
+            $import = new CompaniesImport();
+            Excel::import($import, $request->file('file'));
+
+            $message = "Import berhasil! {$import->getImported()} data diproses";
+            if ($import->getSkipped() > 0) {
+                $message .= ", {$import->getSkipped()} dilewati";
+            }
+            if (count($import->getErrors()) > 0) {
+                $message .= ". Error: " . implode(', ', $import->getErrors());
+            }
+
+            return back()->with('success', $message);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Import gagal: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        $filename = 'template-import-companies.xlsx';
+        return Excel::download(new CompaniesImportTemplate(), $filename);
     }
 }
