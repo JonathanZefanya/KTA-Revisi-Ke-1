@@ -4,100 +4,185 @@
 @section('page_title','Daftar Pengguna')
 
 @section('content')
-    <div class="adm-card mb-4">
-        <form method="get" class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label small text-dim mb-1">Pencarian</label>
-                <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm bg-dark border-secondary text-light" placeholder="Nama / Email / Telp">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small text-dim mb-1">Status</label>
-                <select name="status" class="form-select form-select-sm bg-dark border-secondary text-light">
-                    <option value="">Semua</option>
-                    <option value="pending" @selected($status==='pending')>Pending</option>
-                    <option value="approved" @selected($status==='approved')>Approved</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small text-dim mb-1 d-block">&nbsp;</label>
-                <button class="btn btn-sm btn-primary">Filter</button>
-                <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
-                <a href="{{ route('admin.users.export', request()->only(['q', 'status'])) }}" class="btn btn-sm btn-success">
-                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="vertical-align:middle;margin-top:-2px;">
-                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-                    </svg> Export Excel
-                </a>
-            </div>
-            <div class="col-md-4 text-end small text-dim">
-                <div>Total: <span class="text-light fw-semibold">{{ number_format($users->total()) }}</span></div>
-                <div>Pending: <span class="text-warning fw-semibold">{{ number_format(\App\Models\User::whereNull('approved_at')->count()) }}</span></div>
-            </div>
-        </form>
+<style>
+.stats-card {
+    background: linear-gradient(135deg, var(--adm-card), var(--adm-accent));
+    border: 1px solid var(--adm-border);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+.stats-card .stats-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--adm-text);
+}
+.stats-card .stats-label {
+    font-size: 0.8rem;
+    color: var(--adm-text-dim);
+    margin-top: 0.25rem;
+}
+.filter-section {
+    background: var(--adm-card);
+    border: 1px solid var(--adm-border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.action-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+@media (max-width: 768px) {
+    .action-toolbar {
+        flex-direction: column;
+    }
+    .action-toolbar .btn {
+        width: 100%;
+    }
+}
+</style>
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stats-card">
+            <div class="stats-value">{{ number_format($users->total()) }}</div>
+            <div class="stats-label"><i class="bi bi-people-fill me-1"></i>Total Pengguna</div>
+        </div>
     </div>
+    <div class="col-md-4">
+        <div class="stats-card">
+            <div class="stats-value text-warning">{{ number_format(\App\Models\User::whereNull('approved_at')->count()) }}</div>
+            <div class="stats-label"><i class="bi bi-clock-history me-1"></i>Pending Approval</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stats-card">
+            <div class="stats-value text-success">{{ number_format(\App\Models\User::whereNotNull('approved_at')->count()) }}</div>
+            <div class="stats-label"><i class="bi bi-check-circle-fill me-1"></i>Approved</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-section">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label small text-dim mb-1"><i class="bi bi-search me-1"></i>Pencarian</label>
+            <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm bg-dark border-secondary text-light" placeholder="Nama / Email / Telp">
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small text-dim mb-1"><i class="bi bi-funnel me-1"></i>Status</label>
+            <select name="status" class="form-select form-select-sm bg-dark border-secondary text-light">
+                <option value="">Semua</option>
+                <option value="pending" @selected($status==='pending')>Pending</option>
+                <option value="approved" @selected($status==='approved')>Approved</option>
+            </select>
+        </div>
+        <div class="col-lg-7 col-md-12">
+            <div class="action-toolbar">
+                <button class="btn btn-sm btn-primary"><i class="bi bi-funnel-fill me-1"></i>Filter</button>
+                <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-clockwise me-1"></i>Reset</a>
+                <a href="{{ route('admin.users.export', request()->only(['q', 'status'])) }}" class="btn btn-sm btn-success">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+                </a>
+                <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-outline-primary ms-auto"><i class="bi bi-plus-circle me-1"></i>Tambah User</a>
+            </div>
+        </div>
+    </form>
+</div>
+<!-- Table Card -->
+<div class="adm-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0"><i class="bi bi-table me-2"></i>Data Pengguna</h6>
+        <div class="text-dim small">
+            Menampilkan {{ $users->firstItem() ?? 0 }} - {{ $users->lastItem() ?? 0 }} dari {{ $users->total() }}
+        </div>
+    </div>
+
     <form id="bulk-approve-form" method="post" action="{{ route('admin.users.bulkApprove') }}" onsubmit="return confirm('Setujui user terpilih?')">
         @csrf
-    <div class="adm-table-wrap">
-        <table class="adm-table">
-            <thead>
-            <tr>
-                <th><input type="checkbox" onclick="toggleAll(this)"></th>
-                <th>#</th>
-                <th>Nama</th>
-                <th>Email</th>
-                <th>Telp</th>
-                <th>Daftar</th>
-                <th>Status</th>
-                <th>Aksi</th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse($users as $i => $u)
-                <tr>
-                    <td><input type="checkbox" name="ids[]" value="{{ $u->id }}" class="row-check"></td>
-                    <td>{{ $users->firstItem() + $i }}</td>
-                    <td class="text-light">{{ $u->name }}</td>
-                    <td>{{ $u->email }}</td>
-                    <td>{{ $u->company_phone ?? '-' }}</td>
-                    <td>{{ $u->created_at?->format('d/m/Y H:i') }}</td>
-                    <td>
-                        @if($u->approved_at)
-                            <span class="badge bg-success">Approved</span>
-                        @else
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        @endif
-                    </td>
-                    <td class="text-nowrap">
-                        <a href="{{ route('admin.users.show',$u) }}" class="btn btn-sm btn-outline-secondary">Detail</a>
-                        <a href="{{ route('admin.users.edit',$u) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                        <button type="button" class="btn btn-sm btn-outline-danger del-user-btn" data-user-id="{{ $u->id }}">Hapus</button>
-                        @if(!$u->approved_at)
-                            <button
-                                class="btn btn-sm btn-success"
-                                formaction="{{ route('admin.users.approve',$u) }}"
-                                formmethod="POST"
-                                onclick="return confirm('Setujui user ini?')"
-                                name="_token"
-                                value="{{ csrf_token() }}"
-                            >Approve</button>
-                        @endif
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="8" class="text-center py-4 text-dim">Tidak ada data</td></tr>
-            @endforelse
-            </tbody>
-        </table>
-    </div>
-    <div class="d-flex justify-content-between mt-3 small">
-        <div class="d-flex gap-2">
-            <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-outline-primary">Tambah</a>
-            <button type="submit" class="btn btn-sm btn-success">Bulk Approve</button>
-            <button type="button" class="btn btn-sm btn-danger" onclick="bulkDeleteUsers()">Bulk Delete</button>
+        
+        <!-- Bulk Actions Toolbar -->
+        <div class="mb-3 p-2 bg-dark rounded d-flex gap-2 flex-wrap align-items-center">
+            <input type="checkbox" onclick="toggleAll(this)" class="form-check-input" id="selectAll">
+            <label for="selectAll" class="form-check-label text-dim small me-auto">Pilih Semua</label>
+            <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check-circle me-1"></i>Bulk Approve</button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="bulkDeleteUsers()"><i class="bi bi-trash me-1"></i>Bulk Delete</button>
         </div>
-        <div>{{ $users->links() }}</div>
-    </div>
+
+        <div class="adm-table-wrap">
+            <table class="adm-table">
+                <thead>
+                <tr>
+                    <th width="40"></th>
+                    <th width="50">#</th>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>Telp</th>
+                    <th>Tgl Daftar</th>
+                    <th width="100">Status</th>
+                    <th width="320">Aksi</th>
+                </tr>
+                </thead>
+                <tbody>
+                @forelse($users as $i => $u)
+                    <tr>
+                        <td><input type="checkbox" name="ids[]" value="{{ $u->id }}" class="row-check form-check-input"></td>
+                        <td class="text-dim">{{ $users->firstItem() + $i }}</td>
+                        <td>
+                            <div class="fw-semibold text-light">{{ $u->name }}</div>
+                            @if($u->companies->first())
+                                <div class="small text-info">{{ $u->companies->first()->name }}</div>
+                            @endif
+                        </td>
+                        <td class="small">{{ $u->email }}</td>
+                        <td class="small">{{ $u->company_phone ?? '-' }}</td>
+                        <td class="small text-dim">{{ $u->created_at?->format('d/m/Y H:i') }}</td>
+                        <td>
+                            @if($u->approved_at)
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Approved</span>
+                            @else
+                                <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Pending</span>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ route('admin.users.show',$u) }}" class="btn btn-outline-secondary" title="Detail"><i class="bi bi-eye"></i></a>
+                                <a href="{{ route('admin.users.edit',$u) }}" class="btn btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                                <button type="button" class="btn btn-outline-danger del-user-btn" data-user-id="{{ $u->id }}" title="Hapus"><i class="bi bi-trash"></i></button>
+                            </div>
+                            @if(!$u->approved_at)
+                                <button
+                                    class="btn btn-sm btn-success ms-1"
+                                    formaction="{{ route('admin.users.approve',$u) }}"
+                                    formmethod="POST"
+                                    onclick="return confirm('Setujui user ini?')"
+                                    name="_token"
+                                    value="{{ csrf_token() }}"
+                                    title="Approve"
+                                ><i class="bi bi-check-lg"></i> Approve</button>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="8" class="text-center py-5 text-dim">
+                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                        <div class="mt-2">Tidak ada data pengguna</div>
+                    </td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
     </form>
+
+    <!-- Pagination -->
+    <div class="mt-3">
+        {{ $users->links() }}
+    </div>
+</div>
     
     <form id="bulk-delete-form" method="POST" action="{{ route('admin.users.bulkDelete') }}" style="display:none;">
         @csrf
