@@ -44,11 +44,11 @@ class CompaniesImport implements ToCollection, WithHeadingRow, WithBatchInserts,
                             continue;
                         }
                         
-                        if (empty($row['email'])) {
-                            $this->skipped++;
-                            $this->errors[] = "Baris " . ($index + 2) . ": Email kosong (Email wajib diisi)";
-                            continue;
-                        }
+                        // if (empty($row['email'])) {
+                        //     $this->skipped++;
+                        //     $this->errors[] = "Baris " . ($index + 2) . ": Email kosong (Email wajib diisi)";
+                        //     continue;
+                        // }
 
                         // Pisahkan alamat dan kode pos (pattern: alamat - kodepos)
                         $alamat = $row['alamat_badan_usaha'] ?? $row['alamat'] ?? '';

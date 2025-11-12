@@ -12,6 +12,7 @@ class AdminSeeder extends Seeder
         Admin::firstOrCreate(['email' => 'admin@example.com'], [
             'name' => 'Administrator',
             'password' => bcrypt('Admin!1234'),
+            'role' => 'superadmin',
         ]);
     }
 }
