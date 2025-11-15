@@ -38,6 +38,7 @@
         flex:1;
         min-width:0;
         word-break:break-word;
+        padding-left:10px;
     }
 
     /* Bar masa berlaku - border mengikuti panjang teks */
@@ -81,44 +82,24 @@
         @if($company)
         <div class="meta">
             <div class="row">
-                <div class="label">
-                    NAMA PERUSAHAAN
-                </div>
-                <div class="val">
-                    : {{ $company->name }}
-                </div>
+                <div class="label">NAMA PERUSAHAAN</div>
+                <div class="val">: {{ $company->name }}</div>
             </div>
             <div class="row">
-                <div class="label">
-                    NAMA PIMPINAN
-                </div>
-                <div class="val">
-                    : {{ $user->name }}
-                </div>
+                <div class="label">NAMA PIMPINAN</div>
+                <div class="val">: {{ $user->name }}</div>
             </div>
             <div class="row">
-                <div class="label">
-                    NO. NPWP
-                </div>
-                <div class="val">
-                    : {{ $company->npwp ?? '-' }}
-                </div>
+                <div class="label">NO. NPWP</div>
+                <div class="val">: {{ $company->npwp ?? '-' }}</div>
             </div>
             <div class="row">
-                <div class="label">
-                    KUALIFIKASI
-                </div>
-                <div class="val">
-                    : {{ $company->kualifikasi ?? '-' }}
-                </div>
+                <div class="label">KUALIFIKASI</div>
+                <div class="val">: {{ $company->kualifikasi ?? '-' }}</div>
             </div>
             <div class="row">
-                <div class="label">
-                    ALAMAT PERUSAHAAN
-                </div>
-                <div class="val">
-                    : {{ $company->address ?? '-' }}
-                </div>
+                <div class="label">ALAMAT PERUSAHAAN</div>
+                <div class="val">: {{ $company->address ?? '-' }}</div>
             </div>
         </div>
         @endif
