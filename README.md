@@ -1,6 +1,6 @@
 # 🏗️ Sistem Manajemen KTA (Kartu Tanda Anggota)
 
-Sistem manajemen KTA untuk **Asosiasi Anggota Aspal dan Beton Indonesia (AABI)** yang dibangun dengan Laravel 11.
+Sistem manajemen KTA untuk **Asosiasi Anggota Aspal dan Beton Indonesia (AABI)** yang dibangun dengan Laravel 12.
 
 ---
 
