@@ -68,7 +68,7 @@ Sistem KTA adalah aplikasi web untuk mengelola keanggotaan perusahaan konstruksi
 ## 🛠️ Teknologi
 
 ### Backend
-- **Laravel 11** - PHP Framework
+- **Laravel 12** - PHP Framework
 - **PHP 8.2+** - Programming Language
 - **MySQL 8.0+** - Database
 
