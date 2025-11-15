@@ -2,37 +2,7 @@
     RewriteEngine On
     
     # Redirect to public folder
-    RewriteCond %{REQUEST_URI} !^/public/
-    RewriteRule ^(.*)$ /public/$1 [L,QSA]
-    
-    # Remove /public/ from URL if accessed directly
-    RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /public/
-    RewriteRule ^public/(.*)$ /$1 [R=301,L]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
-
-# Disable directory browsing
-Options -Indexes
-
-# Prevent access to sensitive files
-<FilesMatch "^\.">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Protect .env file
-<FilesMatch "^\.env">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Protect composer files
-<FilesMatch "(composer\.json|composer\.lock)">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Protect package.json
-<FilesMatch "package\.json">
-    Order allow,deny
-    Deny from all
-</FilesMatch>

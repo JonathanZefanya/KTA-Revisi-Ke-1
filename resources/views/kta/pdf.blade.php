@@ -37,6 +37,7 @@
     .val {
         flex:1;
         min-width:0;
+        word-break:break-word;
     }
 
     /* Bar masa berlaku - border mengikuti panjang teks */
