@@ -286,4 +286,37 @@ class AdminUserController extends Controller
         $filename = 'data-users-' . date('Y-m-d-His') . '.xlsx';
         return Excel::download(new UsersExport($query), $filename);
     }
+
+    /**
+     * Search users for AJAX autocomplete (used in invoice creation)
+     */
+    public function search(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $users = User::with(['companies'])
+            ->where(function($query) use ($q){
+                $query->where('name', 'like', "%$q%")
+                      ->orWhere('email', 'like', "%$q%")
+                      ->orWhere('phone', 'like', "%$q%");
+            })
+            ->whereNotNull('approved_at')
+            ->limit(10)
+            ->get()
+            ->map(function($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'company_id' => $user->companies->first()?->id,
+                    'company_name' => $user->companies->first()?->name,
+                ];
+            });
+
+        return response()->json($users);
+    }
 }

@@ -44,11 +44,11 @@ class CompaniesImport implements ToCollection, WithHeadingRow, WithBatchInserts,
                             continue;
                         }
                         
-                        if (empty($row['email'])) {
-                            $this->skipped++;
-                            $this->errors[] = "Baris " . ($index + 2) . ": Email kosong (Email wajib diisi)";
-                            continue;
-                        }
+                        // if (empty($row['email'])) {
+                        //     $this->skipped++;
+                        //     $this->errors[] = "Baris " . ($index + 2) . ": Email kosong (Email wajib diisi)";
+                        //     continue;
+                        // }
 
                         // Pisahkan alamat dan kode pos (pattern: alamat - kodepos)
                         $alamat = $row['alamat_badan_usaha'] ?? $row['alamat'] ?? '';
@@ -210,21 +210,35 @@ class CompaniesImport implements ToCollection, WithHeadingRow, WithBatchInserts,
             $tanggalExpiredKta = $tanggalTerbitKta->copy()->addYears(2);
         }
 
-        // Generate nomor KTA
-        // Format: KTA-{TAHUN_TERBIT}-{URUT} (contoh: KTA-2025-0001)
-        $year = $tanggalTerbitKta->format('Y');
-        $lastNumber = User::where('membership_card_number', 'like', "KTA-{$year}-%")
-            ->orderByRaw('CAST(SUBSTRING_INDEX(membership_card_number, "-", -1) AS UNSIGNED) DESC')
-            ->value('membership_card_number');
-        
-        if ($lastNumber) {
-            $parts = explode('-', $lastNumber);
-            $nextNumber = intval(end($parts)) + 1;
+        // Ambil nomor KTA dari Excel jika ada
+        // Support multiple column names untuk "Nomor Keanggotaan"
+        $nomorKtaFromExcel = $row['nomor_keanggotaan'] 
+            ?? $row['nomor_kta'] 
+            ?? $row['no_kta'] 
+            ?? $row['kta_number'] 
+            ?? null;
+
+        // Cek apakah nomor KTA dari Excel sudah digunakan
+        if (!empty($nomorKtaFromExcel)) {
+            // Bersihkan nomor KTA (hapus spasi, tab, newline)
+            $nomorKtaFromExcel = trim($nomorKtaFromExcel);
+            
+            // Cek apakah nomor sudah ada di database
+            $existingKta = User::where('membership_card_number', $nomorKtaFromExcel)
+                ->where('id', '!=', $user->id)
+                ->exists();
+            
+            if (!$existingKta) {
+                // Gunakan nomor dari Excel
+                $ktaNumber = $nomorKtaFromExcel;
+            } else {
+                // Jika sudah ada, generate nomor baru dengan suffix
+                $ktaNumber = $this->generateUniqueKtaNumber($tanggalTerbitKta);
+            }
         } else {
-            $nextNumber = 1;
+            // Generate nomor KTA otomatis jika tidak ada di Excel
+            $ktaNumber = $this->generateUniqueKtaNumber($tanggalTerbitKta);
         }
-        
-        $ktaNumber = sprintf('KTA-%s-%04d', $year, $nextNumber);
 
         // Update user dengan data KTA
         // membership_card_issued_at = Tanggal Terbit KTA (dari Tanggal Registrasi Terakhir)
@@ -234,5 +248,41 @@ class CompaniesImport implements ToCollection, WithHeadingRow, WithBatchInserts,
             'membership_card_issued_at' => $tanggalTerbitKta,
             'membership_card_expires_at' => $tanggalExpiredKta,
         ]);
+    }
+
+    /**
+     * Generate nomor KTA unik dengan format sama seperti di Excel
+     * Format dari Excel: 16/012/AB, 13/014/AB, dst
+     * Format generate: {URUT}/{BULAN_TAHUN}/AB
+     * Contoh: 01/0125/AB (urut 01, bulan 01, tahun 25, suffix AB)
+     */
+    protected function generateUniqueKtaNumber($tanggalTerbit)
+    {
+        // Parse format dari contoh: 16/012/AB
+        // Pattern: {2digit urut}/{3digit kode}/AB
+        // Kode 012 = bulan 01, tahun 2 (2012? atau 012?)
+        
+        // Ambil bulan dan 2 digit tahun terakhir dari tanggal terbit
+        $month = $tanggalTerbit->format('m'); // 01-12
+        $yearShort = $tanggalTerbit->format('y'); // 25 untuk 2025
+        $kodeWaktu = $month . $yearShort; // Contoh: 0125 untuk Januari 2025
+        
+        // Cari nomor urut terakhir dengan format yang sama
+        // Pattern: __/0125/AB (__ = 2 digit urut)
+        $lastKta = User::where('membership_card_number', 'like', "%/{$kodeWaktu}/AB")
+            ->orderByRaw('CAST(SUBSTRING_INDEX(membership_card_number, "/", 1) AS UNSIGNED) DESC')
+            ->value('membership_card_number');
+        
+        if ($lastKta) {
+            // Ambil nomor urut dari format: 16/012/AB -> 16
+            $parts = explode('/', $lastKta);
+            $nextNumber = intval($parts[0]) + 1;
+        } else {
+            // Mulai dari 01
+            $nextNumber = 1;
+        }
+        
+        // Format: 01/0125/AB, 02/0125/AB, dst
+        return sprintf('%02d/%s/AB', $nextNumber, $kodeWaktu);
     }
 }

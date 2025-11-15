@@ -85,17 +85,18 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
     // User management CRUD + approval
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::get('/users/search', [AdminUserController::class, 'search'])->name('admin.users.search');
     Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
-    Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show');
+    Route::get('/users/export', [AdminUserController::class, 'export'])->name('admin.users.export');
     Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
+    Route::post('/users/bulk-approve', [AdminUserController::class, 'bulkApprove'])->name('admin.users.bulkApprove');
+    Route::post('/users/bulk-delete', [AdminUserController::class, 'bulkDelete'])->name('admin.users.bulkDelete');
+    Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show');
     Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
-    Route::post('/users/bulk-approve', [AdminUserController::class, 'bulkApprove'])->name('admin.users.bulkApprove');
-    Route::post('/users/bulk-delete', [AdminUserController::class, 'bulkDelete'])->name('admin.users.bulkDelete');
     Route::post('/users/{user}/approve', [AdminUserController::class, 'approve'])->name('admin.users.approve');
     Route::post('/users/{user}/generate-registration-invoice', [AdminUserController::class,'generateRegistrationInvoice'])->name('admin.users.generateRegistrationInvoice');
-    Route::get('/users/export', [AdminUserController::class, 'export'])->name('admin.users.export');
 
     // Company management
     Route::get('/companies', [AdminCompanyController::class, 'index'])->name('admin.companies.index');
@@ -108,8 +109,7 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::get('/companies/{company}/edit', [AdminCompanyController::class, 'edit'])->name('admin.companies.edit');
     Route::put('/companies/{company}', [AdminCompanyController::class, 'update'])->name('admin.companies.update');
     Route::get('/companies/{company}/download-all', [AdminCompanyController::class, 'downloadAll'])->name('admin.companies.downloadAll');
-    // Users management (read-only list for now)
-    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    
     // Settings
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('admin.settings.index');
     Route::post('/settings/site', [AdminSettingController::class, 'updateSite'])->name('admin.settings.updateSite');
