@@ -89,20 +89,30 @@
         top:{{ $cfg['meta']['top'] }}px;
         width:{{ $cfg['meta']['width'] }}px;
         font-size:{{ $cfg['meta']['fontSize'] }}px;
-        line-height:1.6;
     }
-    .row{display:flex;margin:3px 0;}
-    .label {
-        flex:0 0 {{ $cfg['meta']['labelWidth'] }}px; 
-        max-width:{{ $cfg['meta']['labelWidth'] }}px;
-        font-weight:700;
-        white-space:nowrap;
+    .meta table {
+        border-collapse: collapse;
+        width: 130%;
+        border: none;
     }
-    .val {
-        flex:1;
-        min-width:0;
-        word-break:break-word;
-        padding-left:10px;
+    .meta table td {
+        border: none;
+        padding: 15px 10px;
+        vertical-align: top;
+    }
+    .meta table td:first-child {
+        font-weight: 700;
+        width: auto;
+        white-space: nowrap;
+        padding-left: 40px;
+        padding-right: 10px;
+    }
+    .meta table td:nth-child(2) {
+        width: auto;
+        padding-right: 10px;
+    }
+    .meta table td:last-child {
+        word-break: break-word;
     }
 
     /* Bar masa berlaku - border mengikuti panjang teks */
@@ -162,26 +172,33 @@
         <!-- Data Perusahaan -->
         @if($company)
         <div class="meta">
-            <div class="row">
-                <div class="label">NAMA PERUSAHAAN</div>
-                <div class="val">: {{ $company->name }}</div>
-            </div>
-            <div class="row">
-                <div class="label">NAMA PIMPINAN</div>
-                <div class="val">: {{ $user->name }}</div>
-            </div>
-            <div class="row">
-                <div class="label">NO. NPWP</div>
-                <div class="val">: {{ $company->npwp ?? '-' }}</div>
-            </div>
-            <div class="row">
-                <div class="label">KUALIFIKASI</div>
-                <div class="val">: {{ $company->kualifikasi ?? '-' }}</div>
-            </div>
-            <div class="row">
-                <div class="label">ALAMAT PERUSAHAAN</div>
-                <div class="val">: {{ $company->address ?? '-' }}</div>
-            </div>
+            <table>
+                <tr>
+                    <td>NAMA PERUSAHAAN</td>
+                    <td>:</td>
+                    <td>{{ $company->name }}</td>
+                </tr>
+                <tr>
+                    <td>NAMA PIMPINAN</td>
+                    <td>:</td>
+                    <td>{{ $user->name }}</td>
+                </tr>
+                <tr>
+                    <td>NO. NPWP</td>
+                    <td>:</td>
+                    <td>{{ $company->npwp ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td>KUALIFIKASI</td>
+                    <td>:</td>
+                    <td>{{ $company->kualifikasi ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td>ALAMAT PERUSAHAAN</td>
+                    <td>:</td>
+                    <td>{{ $company->address ?? '-' }}</td>
+                </tr>
+            </table>
         </div>
         @endif
 
