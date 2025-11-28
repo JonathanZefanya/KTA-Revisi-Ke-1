@@ -126,10 +126,15 @@
                     </td>
                     <td>
                         <div class="btn-group btn-group-sm" role="group">
-                            <a class="btn btn-outline-secondary" href="{{ route('admin.kta.show',$u) }}" title="Lihat KTA"><i class="bi bi-eye"></i></a>
-                            <a class="btn btn-outline-info" href="{{ route('admin.kta.show',[$u,'full'=>1]) }}" title="Full Info"><i class="bi bi-info-circle"></i></a>
-                            <a class="btn btn-outline-danger" href="{{ route('admin.kta.pdf',[$u,'full'=>1]) }}" title="Download PDF"><i class="bi bi-file-pdf"></i></a>
-                            <a class="btn btn-outline-primary" href="{{ route('kta.public',[ 'user'=>$u->id, 'number'=>str_replace(['/', '\\'],'-',$u->membership_card_number) ]) }}" target="_blank" title="Validasi Publik"><i class="bi bi-shield-check"></i></a>
+                            <a class="btn btn-outline-primary" href="{{ route('admin.kta.show',$u) }}" title="Lihat Preview KTA">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a class="btn btn-outline-danger" href="{{ route('admin.kta.pdf',[$u,'full'=>1]) }}" title="Download PDF">
+                                <i class="bi bi-file-pdf"></i>
+                            </a>
+                            <a class="btn btn-outline-info" href="{{ route('kta.public',[ 'user'=>$u->id, 'number'=>str_replace(['/', '\\'],'-',$u->membership_card_number) ]) }}" target="_blank" title="Validasi Publik">
+                                <i class="bi bi-shield-check"></i>
+                            </a>
                         </div>
                     </td>
                 </tr>

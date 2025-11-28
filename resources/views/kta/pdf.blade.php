@@ -1,6 +1,14 @@
 @php
     $company = $user->companies()->first();
     $bgPath = public_path('img/kta_template.png');
+    $isPreview = isset($preview) && $preview;
+    
+    // Convert background image to base64 for iframe compatibility
+    $bgBase64 = '';
+    if(file_exists($bgPath)) {
+        $imageData = file_get_contents($bgPath);
+        $bgBase64 = 'data:image/png;base64,' . base64_encode($imageData);
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -8,7 +16,27 @@
 <meta charset="UTF-8">
 <title>KTA {{ $user->membership_card_number }}</title>
 <style>
-    .page{position:relative;width:1000px;height:620px;margin:0 auto;}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+        font-family: 'Arial', sans-serif; 
+        @if($isPreview)
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 20px;
+        @else
+        background: #fff;
+        @endif
+    }
+    .page{
+        position:relative;
+        width:1000px;
+        height:620px;
+        margin:0 auto;
+        @if($isPreview)
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        border-radius: 8px;
+        overflow: hidden;
+        @endif
+    }
     .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;}
     .layer{position:absolute;inset:0;}
 
@@ -66,8 +94,8 @@
 </head>
 <body>
 <div class="page">
-    @if(file_exists($bgPath))
-        <img class="bg" src="{{ $bgPath }}" alt="bg">
+    @if($bgBase64)
+        <img class="bg" src="{{ $bgBase64 }}" alt="bg">
     @endif
     <div class="layer">
         <!-- Nomor Anggota -->

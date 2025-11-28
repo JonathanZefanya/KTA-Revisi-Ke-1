@@ -38,9 +38,8 @@ class AdminKtaController extends Controller
         $qrSvg = QrCode::format('svg')->size(180)->margin(0)->generate($validationUrl);
         $qrPngData = QrCode::format('png')->size(360)->margin(0)->generate($validationUrl);
         $qrPngBase64 = base64_encode($qrPngData);
-        $full = $r->boolean('full');
-        // Reuse existing pdf blade for HTML preview (embedded in iframe style)
-        return view('admin.kta.show',[ 'user'=>$user,'company'=>$company,'logo'=>$logo,'signature'=>$signature,'qrSvg'=>$qrSvg,'qrPng'=>$qrPngBase64,'full'=>$full,'validationUrl'=>$validationUrl ]);
+        // Always use full mode for admin preview (light mode with complete info)
+        return view('admin.kta.show',[ 'user'=>$user,'company'=>$company,'logo'=>$logo,'signature'=>$signature,'qrSvg'=>$qrSvg,'qrPng'=>$qrPngBase64,'validationUrl'=>$validationUrl ]);
     }
 
     public function pdf(User $user, Request $r)
