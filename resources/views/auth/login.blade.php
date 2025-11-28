@@ -84,8 +84,6 @@
             </div>
             <div class="col-lg-5 col-md-7 auth-side d-flex align-items-center">
                 <div class="w-100 text-center px-lg-4">
-                    <h2 class="fw-semibold mb-3">Desain Modern, Responsif</h2>
-                    <p class="text-secondary mx-auto" style="max-width:420px">Aplikasi dirancang dengan UI/UX elegan, warna lembut, kontras cukup, serta struktur yang mudah dipahami oleh seluruh kalangan usia.</p>
                     <div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm mt-4">
                         <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=800&auto=format&fit=crop" alt="Illustration" class="w-100 h-100 object-fit-cover">
                     </div>
