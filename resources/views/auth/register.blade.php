@@ -37,7 +37,7 @@
 <div class="auth-wrapper">
     <div class="container">
         <div class="row g-4 align-items-stretch justify-content-center">
-            <div class="col-lg-5 col-md-7">
+            <div class="col-lg-8 col-md-10">
                 <div class="card position-relative">
                     <div class="floating-shape"></div>
                     <div class="card-body p-4 p-md-5">
@@ -217,15 +217,6 @@
                             </div>
                         </form>
                         <p class="mt-4 small text-secondary mb-0">Dengan mendaftar Anda menyetujui <a href="#" class="link-hover">Ketentuan</a> & <a href="#" class="link-hover">Privasi</a>.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-5 col-md-7 auth-side d-flex align-items-center">
-                <div class="w-100 text-center px-lg-4">
-                    <h2 class="fw-semibold mb-3">Akses Cepat & Aman</h2>
-                    <p class="text-secondary mx-auto" style="max-width:420px">Data Anda dilindungi dengan enkripsi modern. Antarmuka responsif untuk semua perangkat dan usia.</p>
-                    <div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm mt-4">
-                        <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=800&auto=format&fit=crop" alt="Illustration" class="w-100 h-100 object-fit-cover">
                     </div>
                 </div>
             </div>
