@@ -156,6 +156,69 @@
             </div>
         </div>
     </div>
+
+    <!-- KTA Template Section -->
+    <div class="settings-section">
+        <h5><i class="bi bi-card-image me-2"></i>Template Kartu Tanda Anggota (KTA)</h5>
+        <p class="section-description">Upload template background KTA dan atur posisi serta ukuran elemen-elemen di dalamnya.</p>
+        
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <form method="POST" action="{{ route('admin.settings.ktaTemplate') }}" enctype="multipart/form-data" class="small">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label text-dim small mb-1">Upload Template Background</label>
+                        <input type="file" name="kta_template" accept="image/png,image/jpeg" class="form-control form-control-sm bg-dark border-secondary text-light" required>
+                        <div class="form-text text-dim" style="font-size:0.7rem">Format: PNG/JPG, Rekomendasi: 1000x620px, Maks: 5MB</div>
+                    </div>
+                    @php($ktaTemplatePath = $settings['kta_template_path'] ?? 'img/kta_template.png')
+                    @if($ktaTemplatePath)
+                        <div class="mb-3">
+                            <div class="small text-dim mb-2">Template Saat Ini:</div>
+                            <img src="{{ asset(str_starts_with($ktaTemplatePath, 'storage/') ? $ktaTemplatePath : 'storage/'.$ktaTemplatePath) }}" 
+                                 alt="KTA Template" 
+                                 class="img-fluid border rounded" 
+                                 style="max-width:100%;background:#fff"
+                                 onerror="this.src='{{ asset($ktaTemplatePath) }}'">
+                        </div>
+                    @endif
+                    <button class="btn btn-sm btn-success w-100">
+                        <i class="bi bi-upload me-1"></i>Upload Template Baru
+                    </button>
+                </form>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="small text-dim mb-3">
+                    <strong>Atur Posisi & Ukuran Elemen KTA:</strong>
+                    <p class="mb-2" style="font-size:0.75rem">Klik tombol di bawah untuk membuka editor visual yang memungkinkan Anda mengatur posisi dan ukuran setiap elemen.</p>
+                </div>
+                
+                <button type="button" class="btn btn-sm btn-primary mb-3" onclick="openLayoutEditor()">
+                    <i class="bi bi-cursor me-1"></i>Buka Editor Drag & Drop
+                </button>
+
+                <div class="card bg-dark border-secondary">
+                    <div class="card-body p-3">
+                        <div class="small text-light">
+                            <strong class="d-block mb-2">Cara Menggunakan Editor:</strong>
+                            <ol class="mb-0" style="font-size:0.75rem;line-height:1.8">
+                                <li>Klik tombol "Buka Editor Drag & Drop"</li>
+                                <li><strong>Drag (geser)</strong> elemen untuk mengubah posisi</li>
+                                <li><strong>Resize</strong> elemen dengan drag handle di pojok kanan bawah</li>
+                                <li>Gunakan <strong>slider</strong> untuk mengatur ukuran font</li>
+                                <li>Klik "Simpan" untuk menyimpan perubahan</li>
+                            </ol>
+                            <div class="alert alert-info mt-2 mb-0" style="font-size:0.7rem;padding:0.5rem">
+                                <i class="bi bi-lightbulb me-1"></i>
+                                <strong>Tips:</strong> Elemen yang dapat diatur: Nomor Anggota, Judul, Data Perusahaan, Masa Berlaku, Pas Foto, dan QR Code.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Tab: Tanda Tangan -->
@@ -487,6 +550,675 @@ function switchTab(tabName) {
         inp.value = formatNumber(inp.value);
     });
 })();
+
+// KTA Layout Editor with Drag & Drop
+let ktaLayoutConfig = @json(json_decode($settings['kta_layout_config'] ?? '{}', true) ?: []);
+let selectedElement = null;
+let isDragging = false;
+let isResizing = false;
+let startX, startY, startLeft, startTop, startWidth, startHeight;
+
+function openLayoutEditor() {
+    // Ensure config is an object
+    if (!ktaLayoutConfig || typeof ktaLayoutConfig !== 'object' || Object.keys(ktaLayoutConfig).length === 0) {
+        ktaLayoutConfig = {
+            member_box: {left: 50, top: 53, fontSize: 18},
+            title: {left: 460, top: 145, fontSize: 18},
+            meta: {left: 260, top: 190, width: 460, fontSize: 13, labelWidth: 180},
+            expiry: {left: 460, top: 450, fontSize: 12},
+            photo: {left: 262, top: 438, width: 95, height: 125},
+            qr: {right: 50, bottom: 20, width: 50, height: 50}
+        };
+    }
+    
+    const modal = document.getElementById('ktaLayoutModal');
+    if (modal) {
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        // Load template image
+        setTimeout(() => {
+            const bgImg = document.getElementById('canvas-bg');
+            const templatePath = @json($ktaTemplatePath ?? 'img/kta_template.png');
+            bgImg.src = '{{ asset("") }}' + (templatePath.startsWith('storage/') ? templatePath : 'storage/' + templatePath);
+            bgImg.onerror = function() {
+                this.src = '{{ asset("") }}' + templatePath;
+            };
+            
+            initDragDrop();
+            applyConfigToElements();
+        }, 100);
+    }
+}
+
+function initDragDrop() {
+    const canvas = document.getElementById('kta-canvas');
+    const elements = canvas.querySelectorAll('.draggable-elem');
+    
+    elements.forEach(elem => {
+        // Click to select
+        elem.addEventListener('click', (e) => {
+            if (isResizing) return;
+            selectElement(elem);
+            e.stopPropagation();
+        });
+        
+        // Drag element
+        elem.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('resize-handle')) {
+                startResize(e, elem);
+            } else {
+                startDrag(e, elem);
+            }
+        });
+    });
+    
+    // Deselect on canvas click
+    canvas.addEventListener('click', () => {
+        if (selectedElement && !isDragging && !isResizing) {
+            deselectElement();
+        }
+    });
+    
+    // Mouse move and up
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+}
+
+function selectElement(elem) {
+    deselectElement();
+    selectedElement = elem;
+    elem.classList.add('selected');
+    
+    const elemKey = elem.dataset.elem;
+    const config = ktaLayoutConfig[elemKey];
+    
+    // Show font control for text elements
+    const fontControl = document.getElementById('font-control');
+    const elemName = document.getElementById('selected-elem-name');
+    const fontSize = config?.fontSize || 14;
+    
+    if (['member_box', 'title', 'meta', 'expiry'].includes(elemKey)) {
+        fontControl.style.display = 'block';
+        elemName.textContent = getElementName(elemKey);
+        
+        const slider = document.getElementById('font-size-slider');
+        const display = document.getElementById('font-size-display');
+        slider.value = fontSize;
+        display.textContent = fontSize + 'px';
+        
+        slider.oninput = function() {
+            display.textContent = this.value + 'px';
+            elem.querySelector('.elem-content').style.fontSize = this.value + 'px';
+            if (!ktaLayoutConfig[elemKey]) ktaLayoutConfig[elemKey] = {};
+            ktaLayoutConfig[elemKey].fontSize = parseInt(this.value);
+        };
+    } else {
+        fontControl.style.display = 'none';
+    }
+    
+    updatePositionInfo(elem);
+}
+
+function deselectElement() {
+    if (selectedElement) {
+        selectedElement.classList.remove('selected');
+        selectedElement = null;
+    }
+}
+
+function getElementName(key) {
+    const names = {
+        member_box: 'Nomor Anggota',
+        title: 'Judul',
+        meta: 'Data Perusahaan',
+        expiry: 'Masa Berlaku',
+        photo: 'Pas Foto',
+        qr: 'QR Code'
+    };
+    return names[key] || key;
+}
+
+function startDrag(e, elem) {
+    if (e.target.classList.contains('resize-handle')) return;
+    
+    isDragging = true;
+    selectedElement = elem;
+    selectElement(elem);
+    
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeft = elem.offsetLeft;
+    startTop = elem.offsetTop;
+    
+    elem.style.cursor = 'grabbing';
+    e.preventDefault();
+}
+
+function startResize(e, elem) {
+    isResizing = true;
+    selectedElement = elem;
+    selectElement(elem);
+    
+    startX = e.clientX;
+    startY = e.clientY;
+    startWidth = elem.offsetWidth;
+    startHeight = elem.offsetHeight;
+    
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+function onMouseMove(e) {
+    if (isDragging && selectedElement) {
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        
+        selectedElement.style.left = (startLeft + dx) + 'px';
+        selectedElement.style.top = (startTop + dy) + 'px';
+        
+        updatePositionInfo(selectedElement);
+    } else if (isResizing && selectedElement) {
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        
+        const newWidth = Math.max(50, startWidth + dx);
+        const newHeight = Math.max(30, startHeight + dy);
+        
+        selectedElement.style.width = newWidth + 'px';
+        selectedElement.style.height = newHeight + 'px';
+        
+        updatePositionInfo(selectedElement);
+    }
+}
+
+function onMouseUp(e) {
+    if (isDragging && selectedElement) {
+        const elemKey = selectedElement.dataset.elem;
+        const config = ktaLayoutConfig[elemKey] || {};
+        
+        config.left = selectedElement.offsetLeft;
+        config.top = selectedElement.offsetTop;
+        
+        ktaLayoutConfig[elemKey] = config;
+        selectedElement.style.cursor = 'move';
+    } else if (isResizing && selectedElement) {
+        const elemKey = selectedElement.dataset.elem;
+        const config = ktaLayoutConfig[elemKey] || {};
+        
+        config.width = selectedElement.offsetWidth;
+        config.height = selectedElement.offsetHeight;
+        
+        ktaLayoutConfig[elemKey] = config;
+    }
+    
+    isDragging = false;
+    isResizing = false;
+}
+
+function updatePositionInfo(elem) {
+    const elemKey = elem.dataset.elem;
+    const config = ktaLayoutConfig[elemKey] || {};
+    
+    const info = document.getElementById('position-info');
+    info.innerHTML = `
+        <strong>${getElementName(elemKey)}</strong><br>
+        <small>
+        Left: ${elem.offsetLeft}px<br>
+        Top: ${elem.offsetTop}px<br>
+        Width: ${elem.offsetWidth}px<br>
+        Height: ${elem.offsetHeight}px
+        ${config.fontSize ? `<br>Font: ${config.fontSize}px` : ''}
+        </small>
+    `;
+}
+
+function applyConfigToElements() {
+    Object.keys(ktaLayoutConfig).forEach(key => {
+        const elem = document.getElementById('elem-' + key);
+        if (!elem) return;
+        
+        const config = ktaLayoutConfig[key];
+        
+        if (config.left !== undefined) elem.style.left = config.left + 'px';
+        if (config.top !== undefined) elem.style.top = config.top + 'px';
+        if (config.width !== undefined) elem.style.width = config.width + 'px';
+        if (config.height !== undefined) elem.style.height = config.height + 'px';
+        if (config.fontSize !== undefined) {
+            elem.querySelector('.elem-content').style.fontSize = config.fontSize + 'px';
+        }
+        
+        // Handle right/bottom positioning for QR
+        if (key === 'qr' && config.right !== undefined) {
+            elem.style.left = (1200 - config.right - (config.width || 50)) + 'px';
+        }
+        if (key === 'qr' && config.bottom !== undefined) {
+            elem.style.top = (744 - config.bottom - (config.height || 50)) + 'px';
+        }
+    });
+}
+
+function resetLayout() {
+    if (confirm('Reset semua elemen ke posisi default?')) {
+        ktaLayoutConfig = {
+            member_box: {left: 50, top: 53, fontSize: 18},
+            title: {left: 460, top: 145, fontSize: 18},
+            meta: {left: 260, top: 190, width: 460, fontSize: 13, labelWidth: 180},
+            expiry: {left: 460, top: 450, fontSize: 12},
+            photo: {left: 262, top: 438, width: 95, height: 125},
+            qr: {right: 50, bottom: 20, width: 50, height: 50}
+        };
+        applyConfigToElements();
+    }
+}
+
+function saveLayoutConfig() {
+    // Update config from current element positions
+    updateLayoutConfig();
+    
+    // Show loading state
+    const saveBtn = event.target;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Menyimpan...';
+    
+    fetch('{{ route("admin.settings.ktaLayout") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            layout_config: JSON.stringify(ktaLayoutConfig)
+        })
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return res.json();
+    })
+    .then(data => {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('ktaLayoutModal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show small';
+        alertDiv.innerHTML = `
+            <i class="bi bi-check-circle me-2"></i>
+            Konfigurasi layout berhasil disimpan! Halaman akan di-refresh untuk melihat perubahan.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        const mainContent = document.querySelector('.adm-main') || document.querySelector('main');
+        if (mainContent && mainContent.firstChild) {
+            mainContent.insertBefore(alertDiv, mainContent.firstChild);
+        }
+        
+        // Reload after short delay
+        setTimeout(() => {
+            location.reload();
+        }, 1500);
+    })
+    .catch(err => {
+        console.error(err);
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+        alert('Gagal menyimpan konfigurasi. Silakan coba lagi.');
+    });
+}
+
+function updateLayoutConfig() {
+    // Update config from current element positions in drag-drop canvas
+    const canvas = document.getElementById('kta-canvas');
+    if (!canvas) return;
+    
+    const elements = canvas.querySelectorAll('.draggable-elem');
+    
+    elements.forEach(elem => {
+        const elemKey = elem.dataset.elem;
+        if (!ktaLayoutConfig[elemKey]) {
+            ktaLayoutConfig[elemKey] = {};
+        }
+        
+        const config = ktaLayoutConfig[elemKey];
+        
+        // Update position
+        config.left = elem.offsetLeft;
+        config.top = elem.offsetTop;
+        
+        // Update size if applicable
+        if (elem.offsetWidth) config.width = elem.offsetWidth;
+        if (elem.offsetHeight) config.height = elem.offsetHeight;
+        
+        // For QR code, maintain right/bottom positioning
+        if (elemKey === 'qr') {
+            config.right = 1200 - elem.offsetLeft - elem.offsetWidth;
+            config.bottom = 744 - elem.offsetTop - elem.offsetHeight;
+        }
+    });
+    
+    console.log('Updated config before save:', ktaLayoutConfig);
+}
 </script>
 @endpush
+
+<!-- KTA Layout Editor Modal -->
+<div class="modal fade" id="ktaLayoutModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-secondary" style="background:#0d1218">
+                <h5 class="modal-title"><i class="bi bi-cursor me-2"></i>Editor Layout KTA - Drag & Drop</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="background:#1a1f2e;padding:0;overflow:hidden">
+                <div class="d-flex h-100">
+                    <!-- Canvas Area -->
+                    <div class="flex-grow-1 position-relative" style="overflow:auto;background:#2a2f3e">
+                        <div class="d-flex align-items-center justify-content-center" style="min-height:100%;padding:1rem">
+                            <div id="kta-canvas-wrapper" style="position:relative;width:100%;max-width:1200px">
+                                <div id="kta-canvas" style="position:relative;width:100%;padding-bottom:62%;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.5);border-radius:8px;overflow:hidden">
+                                    <!-- Template background will be loaded here -->
+                                    <img id="canvas-bg" src="" alt="Template" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none">
+                                    
+                                    <!-- Draggable Elements -->
+                                    <div style="position:absolute;top:0;left:0;width:100%;height:100%">
+                                        <div id="elem-member_box" class="draggable-elem" data-elem="member_box">
+                                            <div class="elem-content">13/028/AB</div>
+                                            <div class="resize-handle"></div>
+                                        </div>
+                                        
+                                        <div id="elem-title" class="draggable-elem" data-elem="title">
+                                            <div class="elem-content">KARTU TANDA ANGGOTA</div>
+                                            <div class="resize-handle"></div>
+                                        </div>
+                                        
+                                        <div id="elem-meta" class="draggable-elem draggable-box" data-elem="meta">
+                                            <div class="elem-content" style="font-size:12px;line-height:1.4">
+                                                <strong>NAMA PERUSAHAAN:</strong> PT CONTOH<br>
+                                                <strong>NAMA PIMPINAN:</strong> John Doe<br>
+                                                <strong>NO. NPWP:</strong> 12.345.678.9-012.000
+                                            </div>
+                                            <div class="resize-handle"></div>
+                                        </div>
+                                        
+                                        <div id="elem-expiry" class="draggable-elem" data-elem="expiry">
+                                            <div class="elem-content">BERLAKU SAMPAI 31 DESEMBER 2025</div>
+                                            <div class="resize-handle"></div>
+                                        </div>
+                                        
+                                        <div id="elem-photo" class="draggable-elem draggable-box" data-elem="photo" style="background:#eee;border:2px solid #000">
+                                            <div class="elem-content" style="display:flex;align-items:center;justify-content:center;height:100%;font-size:10px;color:#666">
+                                                <i class="bi bi-person" style="font-size:40px"></i>
+                                            </div>
+                                            <div class="resize-handle"></div>
+                                        </div>
+                                        
+                                        <div id="elem-qr" class="draggable-elem draggable-box" data-elem="qr" style="background:#fff;border:1px solid #000">
+                                            <div class="elem-content" style="display:flex;align-items:center;justify-content:center;height:100%">
+                                                <i class="bi bi-qr-code" style="font-size:30px"></i>
+                                            </div>
+                                            <div class="resize-handle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Control Panel -->
+                    <div class="border-start border-secondary" style="width:320px;background:#16202b;overflow-y:auto;padding:1.5rem">
+                        <h6 class="mb-3"><i class="bi bi-sliders me-2"></i>Kontrol Elemen</h6>
+                        
+                        <div id="element-controls">
+                            <div class="alert alert-sm alert-info" style="font-size:0.75rem;padding:0.5rem">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Klik elemen di canvas untuk mengatur ukuran font
+                            </div>
+                            
+                            <div id="font-control" style="display:none">
+                                <div class="card bg-secondary mb-3">
+                                    <div class="card-body p-3">
+                                        <label class="form-label small mb-2">
+                                            <strong id="selected-elem-name">Elemen</strong> - Ukuran Font
+                                        </label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input type="range" id="font-size-slider" class="form-range flex-grow-1" min="8" max="32" value="14">
+                                            <span id="font-size-display" class="badge bg-primary" style="min-width:45px">14px</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card bg-secondary">
+                                <div class="card-header small"><strong>Posisi Saat Ini</strong></div>
+                                <div class="card-body p-3">
+                                    <div id="position-info" style="font-size:0.75rem">
+                                        Klik elemen untuk melihat posisi
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-sm btn-outline-warning w-100 mb-2" onclick="resetLayout()">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Reset ke Default
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary" style="background:#0d1218">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Batal
+                </button>
+                <button type="button" class="btn btn-success" onclick="saveLayoutConfig()">
+                    <i class="bi bi-save me-1"></i>Simpan Konfigurasi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.draggable-elem {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    padding: 4px 8px;
+    transition: box-shadow 0.2s;
+    z-index: 10;
+}
+.draggable-elem:hover {
+    box-shadow: 0 0 0 2px #3b82f6;
+}
+.draggable-elem.selected {
+    box-shadow: 0 0 0 3px #ef4444 !important;
+}
+.draggable-elem .elem-content {
+    pointer-events: none;
+    font-weight: 700;
+}
+.draggable-box {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px dashed #3b82f6;
+}
+.resize-handle {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    width: 12px;
+    height: 12px;
+    background: #3b82f6;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    cursor: nwse-resize;
+    display: none;
+}
+.draggable-elem:hover .resize-handle,
+.draggable-elem.selected .resize-handle {
+    display: block;
+}
+</style>
+
+                <div class="row g-4" style="display:none">
+                    <!-- Nomor Anggota -->
+                    <div class="col-md-6">
+                        <div class="card bg-secondary">
+                            <div class="card-header"><strong>Nomor Anggota</strong></div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <label class="form-label small">Left (px)</label>
+                                    <input type="number" id="member_box_left" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'left')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Top (px)</label>
+                                    <input type="number" id="member_box_top" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'top')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Font Size (px)</label>
+                                    <input type="number" id="member_box_fontSize" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'fontSize')">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Judul -->
+                    <div class="col-md-6">
+                        <div class="card bg-secondary">
+                            <div class="card-header"><strong>Judul</strong></div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <label class="form-label small">Left (px)</label>
+                                    <input type="number" id="title_left" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'left')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Top (px)</label>
+                                    <input type="number" id="title_top" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'top')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Font Size (px)</label>
+                                    <input type="number" id="title_fontSize" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'fontSize')">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Perusahaan -->
+                    <div class="col-md-6">
+                        <div class="card bg-secondary">
+                            <div class="card-header"><strong>Data Perusahaan</strong></div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <label class="form-label small">Left (px)</label>
+                                    <input type="number" id="meta_left" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'left')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Top (px)</label>
+                                    <input type="number" id="meta_top" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'top')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Width (px)</label>
+                                    <input type="number" id="meta_width" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'width')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Font Size (px)</label>
+                                    <input type="number" id="meta_fontSize" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'fontSize')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Label Width (px)</label>
+                                    <input type="number" id="meta_labelWidth" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'labelWidth')">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Masa Berlaku -->
+                    <div class="col-md-6">
+                        <div class="card bg-secondary">
+                            <div class="card-header"><strong>Masa Berlaku</strong></div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <label class="form-label small">Left (px)</label>
+                                    <input type="number" id="expiry_left" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'left')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Top (px)</label>
+                                    <input type="number" id="expiry_top" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'top')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Font Size (px)</label>
+                                    <input type="number" id="expiry_fontSize" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'fontSize')">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pas Foto -->
+                    <div class="col-md-6">
+                        <div class="card bg-secondary">
+                            <div class="card-header"><strong>Pas Foto</strong></div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <label class="form-label small">Left (px)</label>
+                                    <input type="number" id="photo_left" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'left')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Top (px)</label>
+                                    <input type="number" id="photo_top" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'top')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Width (px)</label>
+                                    <input type="number" id="photo_width" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'width')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Height (px)</label>
+                                    <input type="number" id="photo_height" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'height')">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QR Code -->
+                    <div class="col-md-6">
+                        <div class="card bg-secondary">
+                            <div class="card-header"><strong>QR Code</strong></div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <label class="form-label small">Right (px)</label>
+                                    <input type="number" id="qr_right" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'right')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Bottom (px)</label>
+                                    <input type="number" id="qr_bottom" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'bottom')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Width (px)</label>
+                                    <input type="number" id="qr_width" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'width')">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small">Height (px)</label>
+                                    <input type="number" id="qr_height" class="form-control form-control-sm" onchange="updateLayoutConfig(this, 'height')">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" onclick="saveLayoutConfig()">
+                    <i class="bi bi-save me-1"></i>Simpan Konfigurasi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection

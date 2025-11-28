@@ -1,7 +1,18 @@
 @php
     $company = $user->companies()->first();
-    $bgPath = public_path('img/kta_template.png');
     $isPreview = isset($preview) && $preview;
+    
+    // Get template path from settings
+    $templatePath = \App\Models\Setting::getValue('kta_template_path', 'img/kta_template.png');
+    
+    // Determine the full path
+    if (str_starts_with($templatePath, 'uploads/')) {
+        $bgPath = storage_path('app/public/' . $templatePath);
+    } elseif (str_starts_with($templatePath, 'storage/')) {
+        $bgPath = public_path($templatePath);
+    } else {
+        $bgPath = public_path($templatePath);
+    }
     
     // Convert background image to base64 for iframe compatibility
     $bgBase64 = '';
@@ -9,6 +20,17 @@
         $imageData = file_get_contents($bgPath);
         $bgBase64 = 'data:image/png;base64,' . base64_encode($imageData);
     }
+    
+    // Get layout configuration
+    $layoutConfig = json_decode(\App\Models\Setting::getValue('kta_layout_config', '{}'), true);
+    $cfg = [
+        'member_box' => $layoutConfig['member_box'] ?? ['left' => 50, 'top' => 53, 'fontSize' => 18],
+        'title' => $layoutConfig['title'] ?? ['left' => 460, 'top' => 145, 'fontSize' => 18],
+        'meta' => $layoutConfig['meta'] ?? ['left' => 260, 'top' => 190, 'width' => 460, 'fontSize' => 13, 'labelWidth' => 180],
+        'expiry' => $layoutConfig['expiry'] ?? ['left' => 460, 'top' => 450, 'fontSize' => 12],
+        'photo' => $layoutConfig['photo'] ?? ['left' => 262, 'top' => 438, 'width' => 95, 'height' => 125],
+        'qr' => $layoutConfig['qr'] ?? ['right' => 50, 'bottom' => 20, 'width' => 50, 'height' => 50],
+    ];
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -42,23 +64,37 @@
 
     /* Nomor Anggota */
     .member-box{
-        position:absolute;left:50px;top:53px;
-        padding:6px 12px;font-weight:700;font-size:18px;letter-spacing:1px;
-        min-width:100px;text-align:center;
+        position:absolute;
+        left:{{ $cfg['member_box']['left'] }}px;
+        top:{{ $cfg['member_box']['top'] }}px;
+        padding:6px 12px;font-weight:700;
+        font-size:{{ $cfg['member_box']['fontSize'] }}px;
+        letter-spacing:1px;min-width:100px;text-align:center;
     }
 
     /* Judul */
     .title{
-        position:absolute;top:145px;left:460px;
-        font-weight:800;font-size:18px;text-decoration:underline;
+        position:absolute;
+        top:{{ $cfg['title']['top'] }}px;
+        left:{{ $cfg['title']['left'] }}px;
+        font-weight:800;
+        font-size:{{ $cfg['title']['fontSize'] }}px;
+        text-decoration:underline;
     }
 
     /* Data perusahaan */
-    .meta{position:absolute;left:260px;top:190px;width:460px;font-size:13px;line-height:1.6;}
+    .meta{
+        position:absolute;
+        left:{{ $cfg['meta']['left'] }}px;
+        top:{{ $cfg['meta']['top'] }}px;
+        width:{{ $cfg['meta']['width'] }}px;
+        font-size:{{ $cfg['meta']['fontSize'] }}px;
+        line-height:1.6;
+    }
     .row{display:flex;margin:3px 0;}
     .label {
-        flex:0 0 180px; 
-        max-width:180px;
+        flex:0 0 {{ $cfg['meta']['labelWidth'] }}px; 
+        max-width:{{ $cfg['meta']['labelWidth'] }}px;
         font-weight:700;
         white-space:nowrap;
     }
@@ -71,23 +107,40 @@
 
     /* Bar masa berlaku - border mengikuti panjang teks */
     .expiry{
-        position:absolute;left:460px;top:450px;
+        position:absolute;
+        left:{{ $cfg['expiry']['left'] }}px;
+        top:{{ $cfg['expiry']['top'] }}px;
         display:inline-block;
         padding:6px 12px;
         border:1px solid #000;
         background:#fff;
-        font-weight:700;font-size:12px;line-height:1.3;
+        font-weight:700;
+        font-size:{{ $cfg['expiry']['fontSize'] }}px;
+        line-height:1.3;
         text-align:center;
         max-width:460px; /* batasi agar tidak melewati kolom kanan */
     }
 
     /* Pas Foto */
-    .photo{position:absolute;left:262px;top:438px;width:95px;height:125px;
-        border:2px solid #000;overflow:hidden;background:#eee;}
+    .photo{
+        position:absolute;
+        left:{{ $cfg['photo']['left'] }}px;
+        top:{{ $cfg['photo']['top'] }}px;
+        width:{{ $cfg['photo']['width'] }}px;
+        height:{{ $cfg['photo']['height'] }}px;
+        border:2px solid #000;overflow:hidden;background:#eee;
+    }
     .photo img{width:100%;height:100%;object-fit:cover;}
 
     /* QR Code */
-    .qr{position:absolute;right:50px;bottom:20px;width:50px;height:50px;border:1px solid #000;padding:4px;background:#fff;}
+    .qr{
+        position:absolute;
+        right:{{ $cfg['qr']['right'] }}px;
+        bottom:{{ $cfg['qr']['bottom'] }}px;
+        width:{{ $cfg['qr']['width'] }}px;
+        height:{{ $cfg['qr']['height'] }}px;
+        border:1px solid #000;padding:4px;background:#fff;
+    }
     .qr img{width:100%;height:100%;object-fit:contain;}
 </style>
 

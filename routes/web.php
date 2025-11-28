@@ -122,6 +122,8 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::post('/settings/renewal-rates', [AdminSettingController::class, 'saveRenewalRates'])->name('admin.settings.saveRenewalRates');
     Route::post('/settings/banks', [AdminSettingController::class, 'storeBank'])->name('admin.settings.banks.store');
     Route::delete('/settings/banks/{bank}', [AdminSettingController::class, 'deleteBank'])->name('admin.settings.banks.delete');
+    Route::post('/settings/kta-template', [AdminSettingController::class, 'uploadKtaTemplate'])->name('admin.settings.ktaTemplate');
+    Route::post('/settings/kta-layout', [AdminSettingController::class, 'saveKtaLayout'])->name('admin.settings.ktaLayout');
     // Admin invoice verification
     Route::get('/invoices', [\App\Http\Controllers\AdminInvoiceController::class,'index'])->name('admin.invoices.index');
     Route::get('/invoices/create', [\App\Http\Controllers\AdminInvoiceController::class,'create'])->name('admin.invoices.create');
