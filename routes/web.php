@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminCompanyController;
 use App\Http\Controllers\AdminSettingController;
 use App\Http\Controllers\MembershipCardController;
+use App\Http\Controllers\PublicMemberListController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', action: function () {
@@ -16,6 +17,9 @@ Route::get('/', action: function () {
 
 // Public KTA validation page (static-like dynamic page)
 Route::get('/kta/verify/{user}/{number}', [MembershipCardController::class,'publicPage'])->where([ 'user'=>'[0-9]+', 'number'=>'[A-Za-z0-9\-]+' ])->name('kta.public');
+
+// Public member list page
+Route::get('/list_anggota', [PublicMemberListController::class, 'index'])->name('public.members');
 
 // Wilayah API (public, cached server-side)
 Route::prefix('api/wilayah')->group(function(){

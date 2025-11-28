@@ -4,3 +4,4 @@
 4. transaksi bisa di tambah oleh admin sendiri (done)
 5. Kartu berdasarkan gambar jadi tinggal di isi nomor, pas foto dan data perusahaan
 6. Tambah Upload Akte Badan usaha di register dan NIB (Nomor Induk Berusaha)
+7. Tambah list daftar anggota (anggota yang status aktif) dapat ditampilkan diluar halaman admin misal : kta.aabi.or.id/list_anggota Kolomnya : No, Nama PT, PJBU, Alamat, ada filter percarian (done)
