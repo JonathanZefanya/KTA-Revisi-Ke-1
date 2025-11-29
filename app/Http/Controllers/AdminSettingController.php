@@ -42,4 +42,35 @@ class AdminSettingController extends Controller {
     public function saveRenewalRates(Request $r){ $amounts=$r->input('renewal_amount',[]); foreach($amounts as $row){ $j=$row['jenis']??null; $k=$row['kualifikasi']??null; $val=$row['amount']??null; if($j && $k){ RenewalPaymentRate::upsertRate($j,$k, $this->parseMoney($val)); }} return back()->with('success','Tarif perpanjangan disimpan'); }
     public function storeBank(Request $r){ $data=$r->validate(['bank_name'=>['required','string','max:80'],'account_number'=>['required','string','max:40'],'account_name'=>['required','string','max:120'],'sort'=>['nullable','integer','min:0']]); BankAccount::updateOrCreate(['bank_name'=>$data['bank_name'],'account_number'=>$data['account_number']], ['account_name'=>$data['account_name'],'sort'=>$data['sort']??0,'is_active'=>true]); return back()->with('success','Rekening disimpan'); }
     public function deleteBank(BankAccount $bank){ $bank->delete(); return back()->with('success','Rekening dihapus'); }
+    
+    public function uploadKtaTemplate(Request $r)
+    {
+        $data = $r->validate([
+            'kta_template' => ['required', 'image', 'mimes:png,jpg,jpeg', 'max:5120'], // 5MB
+        ]);
+        
+        if ($r->hasFile('kta_template')) {
+            $path = $r->file('kta_template')->store('uploads/kta-templates', 'public');
+            Setting::setValue('kta_template_path', $path);
+        }
+        
+        return back()->with('success', 'Template KTA berhasil diupload');
+    }
+    
+    public function saveKtaLayout(Request $r)
+    {
+        $data = $r->validate([
+            'layout_config' => ['required', 'string'],
+        ]);
+        
+        // Validate JSON
+        $config = json_decode($data['layout_config'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return response()->json(['error' => 'Invalid JSON format'], 400);
+        }
+        
+        Setting::setValue('kta_layout_config', $data['layout_config']);
+        
+        return response()->json(['success' => true, 'message' => 'Konfigurasi layout KTA disimpan']);
+    }
 }

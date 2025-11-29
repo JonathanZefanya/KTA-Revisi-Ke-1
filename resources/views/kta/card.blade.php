@@ -1,6 +1,6 @@
 @php
     $company = $user->companies()->first();
-    $bgPath = asset('img/kta_template.png');
+    $bgPath = public_path('img/kta_template.png');
 @endphp
 <!DOCTYPE html>
 <html lang="id">
