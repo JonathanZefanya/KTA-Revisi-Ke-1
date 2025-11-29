@@ -38,6 +38,10 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['web','auth'])->group(function () {
     Route::get('/dashboard', function () { return view('dashboard'); })->name('dashboard');
     Route::get('/pembayaran', [\App\Http\Controllers\PaymentPageController::class,'index'])->middleware(\App\Http\Middleware\EnsureUserApproved::class)->name('pembayaran');
+    //profile
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class,'show'])->name('profile');
+    Route::post('/profile/update-password', [\App\Http\Controllers\ProfileController::class,'updatePassword'])->name('profile.updatePassword');
+    
     Route::get('/kta', function(){
         $user = request()->user();
         if($user && !$user->hasActiveMembershipCard()){
