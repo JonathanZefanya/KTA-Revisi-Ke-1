@@ -28,7 +28,15 @@ class PublicMemberListController extends Controller
             });
         }
 
-        $members = $query->orderBy('name')->paginate(20);
+        // Province filter
+        if ($request->filled('province')) {
+            $province = $request->input('province');
+            $query->whereHas('companies', function($companyQuery) use ($province) {
+                $companyQuery->where('province_name', 'like', "%{$province}%");
+            });
+        }
+
+        $members = $query->orderBy('name')->paginate(20)->withQueryString();
 
         return view('public.member-list', compact('members'));
     }

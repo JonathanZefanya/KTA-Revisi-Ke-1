@@ -70,23 +70,44 @@
 
         <div class="surface">
             <form method="GET" action="{{ route('public.members') }}" class="mb-4">
-                <div class="search-box">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                    <input 
-                        type="text" 
-                        name="search" 
-                        placeholder="Cari nama PT, PJBU, atau alamat..."
-                        value="{{ request('search') }}"
-                        class="form-control"
-                    >
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="search-box" style="max-width:100%;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                            <input 
+                                type="text" 
+                                name="search" 
+                                placeholder="Cari nama PT, PJBU, atau alamat..."
+                                value="{{ request('search') }}"
+                                class="form-control"
+                            >
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div style="position:relative;">
+                            <input 
+                                type="text" 
+                                name="province"
+                                id="provinceSearch" 
+                                placeholder="Ketik untuk cari provinsi..."
+                                value="{{ request('province') }}"
+                                class="form-control"
+                                style="border-radius:var(--ui-radius-sm);padding:.75rem 1rem;border:1px solid var(--ui-border);font-size:.9rem;"
+                                autocomplete="off"
+                            >
+                            <div id="provinceSuggestions" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--ui-border);border-radius:var(--ui-radius-sm);max-height:200px;overflow-y:auto;display:none;z-index:1000;box-shadow:var(--ui-shadow);margin-top:4px;"></div>
+                        </div>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary mt-2">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:.4rem;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                    Cari
-                </button>
-                @if(request('search'))
-                    <a href="{{ route('public.members') }}" class="btn btn-outline-secondary mt-2" style="border-radius:8px;font-size:.85rem;">Reset</a>
-                @endif
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:.4rem;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        Cari
+                    </button>
+                    @if(request('search') || request('province'))
+                        <a href="{{ route('public.members') }}" class="btn btn-outline-secondary" style="border-radius:8px;font-size:.85rem;">Reset</a>
+                    @endif
+                </div>
             </form>
 
             @if($members->total() > 0)
@@ -152,5 +173,91 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Load provinces from wilayah.id API
+        const provinceSearch = document.getElementById('provinceSearch');
+        const provinceSuggestions = document.getElementById('provinceSuggestions');
+        let allProvinces = [];
+
+        async function loadProvinces() {
+            try {
+                const response = await fetch('https://wilayah.id/api/provinces.json');
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                
+                if (data && data.data && Array.isArray(data.data)) {
+                    allProvinces = data.data.map(p => p.name);
+                }
+            } catch (error) {
+                console.error('Error loading provinces:', error);
+                // Fallback to hardcoded provinces if API fails (updated format from wilayah.id)
+                allProvinces = [
+                    'Aceh', 'Bali', 'Banten', 'Bengkulu', 'Daerah Istimewa Yogyakarta',
+                    'DKI Jakarta', 'Gorontalo', 'Jambi', 'Jawa Barat', 'Jawa Tengah',
+                    'Jawa Timur', 'Kalimantan Barat', 'Kalimantan Selatan', 'Kalimantan Tengah',
+                    'Kalimantan Timur', 'Kalimantan Utara', 'Kepulauan Bangka Belitung',
+                    'Kepulauan Riau', 'Lampung', 'Maluku', 'Maluku Utara', 'Nusa Tenggara Barat',
+                    'Nusa Tenggara Timur', 'Papua', 'Papua Barat', 'Papua Barat Daya',
+                    'Papua Pegunungan', 'Papua Selatan', 'Papua Tengah', 'Riau', 'Sulawesi Barat',
+                    'Sulawesi Selatan', 'Sulawesi Tengah', 'Sulawesi Tenggara', 'Sulawesi Utara',
+                    'Sumatera Barat', 'Sumatera Selatan', 'Sumatera Utara'
+                ];
+            }
+        }
+
+        // Show suggestions
+        provinceSearch.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            
+            if (searchTerm.length === 0) {
+                provinceSuggestions.style.display = 'none';
+                return;
+            }
+            
+            const filtered = allProvinces.filter(prov => 
+                prov.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filtered.length === 0) {
+                provinceSuggestions.innerHTML = '<div style="padding:.75rem 1rem;color:#6b7280;font-size:.85rem;">Tidak ada hasil</div>';
+                provinceSuggestions.style.display = 'block';
+                return;
+            }
+            
+            let html = '';
+            filtered.forEach(prov => {
+                html += `<div class="province-item" style="padding:.75rem 1rem;cursor:pointer;font-size:.9rem;border-bottom:1px solid var(--ui-border-soft);transition:background .15s;" onmouseover="this.style.background='var(--ui-surface-alt,#f9fafc)'" onmouseout="this.style.background='#fff'" onclick="selectProvince('${prov}')">${prov}</div>`;
+            });
+            
+            provinceSuggestions.innerHTML = html;
+            provinceSuggestions.style.display = 'block';
+        });
+
+        // Select province
+        function selectProvince(province) {
+            provinceSearch.value = province;
+            provinceSuggestions.style.display = 'none';
+        }
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!provinceSearch.contains(e.target) && !provinceSuggestions.contains(e.target)) {
+                provinceSuggestions.style.display = 'none';
+            }
+        });
+
+        // Show suggestions on focus if there's value
+        provinceSearch.addEventListener('focus', (e) => {
+            if (e.target.value.length > 0) {
+                e.target.dispatchEvent(new Event('input'));
+            }
+        });
+
+        loadProvinces();
+    </script>
 </body>
 </html>
