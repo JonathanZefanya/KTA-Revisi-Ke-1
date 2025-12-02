@@ -23,6 +23,7 @@ class User extends Authenticatable
     'password',
     'phone',
     'approved_at',
+    'is_active',
     'membership_card_number','membership_card_issued_at','membership_card_expires_at'
     ,'membership_photo_path'
     ];
@@ -48,6 +49,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'approved_at' => 'datetime',
+            'is_active' => 'boolean',
             'membership_card_issued_at' => 'date',
             'membership_card_expires_at' => 'date',
         ];
@@ -117,32 +119,54 @@ class User extends Authenticatable
 
     protected function generateMembershipNumber(): string
     {
-        // Format: NN/MMYY/AB (urut/bulan+tahun/suffix)
-        // Contoh: 01/0125/AB = urut 01, bulan 01, tahun 25 (2025)
-        // Sesuai format Excel: 16/012/AB, 13/014/AB, dst
+        // Format Baru: AA/BBB/CCC
+        // AA = Kode provinsi (2 digit dari Kemendagri)
+        // BBB = Nomor urut anggota per provinsi (3 digit, mulai dari 001)
+        // CCC = Status: AB (Anggota Biasa) atau ALB (Anggota Luar Biasa)
+        // Contoh: 31/001/AB (Jakarta, urut 1, Anggota Biasa)
         
-        $now = now();
-        $month = $now->format('m'); // 01-12
-        $yearShort = $now->format('y'); // 25 untuk 2025
-        $kodeWaktu = $month . $yearShort; // Contoh: 0125 untuk Januari 2025
-        
-        // Cari nomor urut terakhir dengan format yang sama
-        // Pattern: __/0125/AB (__ = 2 digit urut)
-        $lastKta = static::where('membership_card_number', 'like', "%/{$kodeWaktu}/AB")
-            ->orderByRaw('CAST(SUBSTRING_INDEX(membership_card_number, "/", 1) AS UNSIGNED) DESC')
-            ->value('membership_card_number');
-        
-        if ($lastKta) {
-            // Ambil nomor urut dari format: 16/012/AB -> 16
-            $parts = explode('/', $lastKta);
-            $nextNumber = intval($parts[0]) + 1;
-        } else {
-            // Mulai dari 01
-            $nextNumber = 1;
+        // Get company with province info
+        $company = $this->companies()->first();
+        if (!$company || !$company->province_code) {
+            // Fallback ke format lama jika tidak ada provinsi
+            return '00/000/AB';
         }
         
-        // Format: 01/0125/AB, 02/0125/AB, dst
-        return sprintf('%02d/%s/AB', $nextNumber, $kodeWaktu);
+        // Get province code (2 digit)
+        $provinceCode = $company->province_code;
+        $provinceCodes = config('province_codes', []);
+        $ktaProvinceCode = $provinceCodes[$provinceCode] ?? substr($provinceCode, 0, 2);
+        
+        // Get membership type from company
+        $membershipType = $company->membership_type ?? 'AB';
+        
+        // Count existing members in same province (exclude current user to avoid double count on regenerate)
+        $count = static::whereHas('companies', function($q) use ($provinceCode) {
+            $q->where('province_code', $provinceCode);
+        })
+        ->where('id', '!=', $this->id)
+        ->where('membership_card_number', 'like', $ktaProvinceCode . '/%')
+        ->count();
+        
+        // Next number (3 digit format)
+        $nextNumber = $count + 1;
+        
+        // Format: 31/001/AB, 31/002/AB, 12/001/ALB, dst
+        return sprintf('%s/%03d/%s', $ktaProvinceCode, $nextNumber, $membershipType);
+    }
+
+    /**
+     * Regenerate nomor KTA untuk menyesuaikan status membership
+     * Digunakan saat admin mengubah membership_type di company
+     */
+    public function regenerateKtaNumber(): void
+    {
+        if (!$this->membership_card_number) {
+            return; // Belum punya KTA, tidak perlu regenerate
+        }
+
+        $newNumber = $this->generateMembershipNumber();
+        $this->forceFill(['membership_card_number' => $newNumber])->save();
     }
 
     /**

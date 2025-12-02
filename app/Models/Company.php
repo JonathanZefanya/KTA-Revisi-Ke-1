@@ -14,6 +14,7 @@ class Company extends Model
     'bentuk',
     'jenis',
     'kualifikasi',
+    'membership_type',
     'penanggung_jawab',
     'npwp',
         'registration_number',

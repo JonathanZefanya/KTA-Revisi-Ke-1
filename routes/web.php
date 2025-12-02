@@ -39,7 +39,7 @@ Route::middleware('guest')->group(function () {
 });
 
 // User Protected routes
-Route::middleware(['web','auth'])->group(function () {
+Route::middleware(['web','auth','user.active'])->group(function () {
     Route::get('/dashboard', function () { return view('dashboard'); })->name('dashboard');
     Route::get('/pembayaran', [\App\Http\Controllers\PaymentPageController::class,'index'])->middleware(\App\Http\Middleware\EnsureUserApproved::class)->name('pembayaran');
     //profile
@@ -68,6 +68,9 @@ Route::middleware(['web','auth'])->group(function () {
     Route::post('/kta/renew', [\App\Http\Controllers\KtaRenewalController::class,'submit'])
         ->middleware([\App\Http\Middleware\EnsureUserApproved::class, \App\Http\Middleware\EnsureUserHasKta::class])
         ->name('kta.renew.submit');
+    Route::post('/kta/generate-renewal-invoice', [\App\Http\Controllers\MembershipCardController::class,'generateRenewalInvoice'])
+        ->middleware(\App\Http\Middleware\EnsureUserApproved::class)
+        ->name('kta.generateRenewalInvoice');
     Route::get('/invoices', [\App\Http\Controllers\InvoiceController::class,'index'])->name('invoices.index');
     Route::get('/invoices/{invoice}', [\App\Http\Controllers\InvoiceController::class,'show'])->name('invoices.show');
     Route::get('/invoices/{invoice}/pdf', [\App\Http\Controllers\InvoiceController::class,'downloadPdf'])->name('invoices.pdf');
@@ -104,6 +107,7 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users/{user}/approve', [AdminUserController::class, 'approve'])->name('admin.users.approve');
+    Route::post('/users/{user}/toggle-active', [AdminUserController::class, 'toggleActive'])->name('admin.users.toggleActive');
     Route::post('/users/{user}/generate-registration-invoice', [AdminUserController::class,'generateRegistrationInvoice'])->name('admin.users.generateRegistrationInvoice');
 
     // Company management

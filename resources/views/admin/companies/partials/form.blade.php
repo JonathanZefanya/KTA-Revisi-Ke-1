@@ -36,6 +36,13 @@
         @endforeach
     </select>
 </div>
+<div class="col-md-3">
+    <label class="form-label small text-dim">Status Anggota</label>
+    <select name="membership_type" class="form-select form-select-sm bg-dark border-secondary text-light">
+        <option value="AB" @selected(old('membership_type', $c?->membership_type ?? 'AB')=='AB')>AB - Anggota Biasa</option>
+        <option value="ALB" @selected(old('membership_type', $c?->membership_type)=='ALB')>ALB - Anggota Luar Biasa</option>
+    </select>
+</div>
 <div class="col-md-6">
     <label class="form-label small text-dim">Penanggung Jawab</label>
     @if(!$c)

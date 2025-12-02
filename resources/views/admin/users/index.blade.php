@@ -124,6 +124,7 @@
                     <th>Telp</th>
                     <th>Tgl Daftar</th>
                     <th width="100">Status</th>
+                    <th width="80">Aktif</th>
                     <th width="320">Aksi</th>
                 </tr>
                 </thead>
@@ -147,6 +148,11 @@
                             @else
                                 <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Pending</span>
                             @endif
+                        </td>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input toggle-active" type="checkbox" data-user-id="{{ $u->id }}" {{ $u->is_active ? 'checked' : '' }}>
+                            </div>
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
@@ -233,6 +239,40 @@
                     f.action = '/admin/users/' + id;
                     f.submit();
                 }
+            });
+        });
+
+        // Toggle Active Status
+        document.querySelectorAll('.toggle-active').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const userId = this.getAttribute('data-user-id');
+                const isActive = this.checked;
+                
+                fetch(`/admin/users/${userId}/toggle-active`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ is_active: isActive })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Optional: show success notification
+                        console.log('Status updated successfully');
+                    } else {
+                        // Revert toggle if failed
+                        this.checked = !isActive;
+                        alert('Gagal mengubah status');
+                    }
+                })
+                .catch(error => {
+                    // Revert toggle if error
+                    this.checked = !isActive;
+                    alert('Terjadi kesalahan');
+                    console.error('Error:', error);
+                });
             });
         });
     </script>
