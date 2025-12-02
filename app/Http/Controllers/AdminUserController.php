@@ -99,6 +99,22 @@ class AdminUserController extends Controller
         return back()->with('success','User diperbarui');
     }
 
+    public function toggleActive(Request $request, User $user)
+    {
+        $request->validate([
+            'is_active' => 'required|boolean'
+        ]);
+
+        $user->is_active = $request->is_active;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status user berhasil diubah',
+            'is_active' => $user->is_active
+        ]);
+    }
+
     public function destroy(User $user)
     {
         try {

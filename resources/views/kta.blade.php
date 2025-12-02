@@ -1,4 +1,5 @@
 @php($user = auth()->user())
+@php($isExpired = $user->membership_card_expires_at && now()->gt($user->membership_card_expires_at))
 @extends('layouts.user')
 @section('title','KTA')
 @section('content')
@@ -6,10 +7,24 @@
         <h1 class="h5 fw-semibold mb-0">KTA</h1>
         @if($user->hasActiveMembershipCard())
             <x-status-badge type="success">AKTIF</x-status-badge>
+        @elseif($isExpired)
+            <x-status-badge type="danger">EXPIRED</x-status-badge>
         @else
             <x-status-badge type="warning">BELUM TERBIT</x-status-badge>
         @endif
     </div>
+    @if($isExpired)
+        <div class="surface p-3 small mb-3">
+            <div class="fw-semibold mb-2 text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>KTA Anda Sudah Expired</div>
+            <p class="text-secondary mb-2">Kartu keanggotaan Anda telah berakhir pada {{ $user->membership_card_expires_at->format('d M Y') }}. Silakan generate invoice perpanjangan untuk memperpanjang masa aktif KTA.</p>
+            <form method="POST" action="{{ route('kta.generateRenewalInvoice') }}">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-file-earmark-text me-1"></i>Generate Invoice Perpanjangan
+                </button>
+            </form>
+        </div>
+    @endif
     @if($user->hasActiveMembershipCard())
         <div class="surface p-3 small d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start align-items-md-center mb-4">
             <div>

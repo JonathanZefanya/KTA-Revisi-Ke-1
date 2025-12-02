@@ -23,6 +23,7 @@ class User extends Authenticatable
     'password',
     'phone',
     'approved_at',
+    'is_active',
     'membership_card_number','membership_card_issued_at','membership_card_expires_at'
     ,'membership_photo_path'
     ];
@@ -48,6 +49,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'approved_at' => 'datetime',
+            'is_active' => 'boolean',
             'membership_card_issued_at' => 'date',
             'membership_card_expires_at' => 'date',
         ];

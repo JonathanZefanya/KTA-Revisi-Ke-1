@@ -65,4 +65,58 @@ class MembershipCardController extends Controller
         ]);
     }
 
+    public function generateRenewalInvoice(Request $r)
+    {
+        $user = $r->user();
+        
+        // Validasi: KTA harus expired
+        if (!$user->membership_card_expires_at || now()->lte($user->membership_card_expires_at)) {
+            return back()->with('error', 'KTA Anda masih aktif. Invoice perpanjangan hanya bisa dibuat untuk KTA yang sudah expired.');
+        }
+
+        // Cek apakah sudah ada invoice perpanjangan yang belum dibayar
+        $existingInvoice = \App\Models\Invoice::where('user_id', $user->id)
+            ->where('type', 'renewal')
+            ->where('status', \App\Models\Invoice::STATUS_UNPAID)
+            ->first();
+
+        if ($existingInvoice) {
+            return redirect()->route('pembayaran')->with('info', 'Anda sudah memiliki invoice perpanjangan yang belum dibayar.');
+        }
+
+        // Get renewal payment rate based on company jenis & kualifikasi
+        $company = $user->companies()->first();
+        if (!$company) {
+            return back()->with('error', 'Data perusahaan tidak ditemukan.');
+        }
+
+        $rate = \App\Models\RenewalPaymentRate::where('jenis', $company->jenis)
+            ->where('kualifikasi', $company->kualifikasi)
+            ->first();
+        
+        if (!$rate) {
+            return back()->with('error', 'Tarif perpanjangan untuk jenis dan kualifikasi Anda belum tersedia. Silakan hubungi admin.');
+        }
+
+        // Create renewal invoice
+        $invoice = \App\Models\Invoice::create([
+            'user_id' => $user->id,
+            'number' => \App\Models\Invoice::generateNumber(),
+            'type' => 'renewal',
+            'amount' => $rate->amount,
+            'status' => \App\Models\Invoice::STATUS_UNPAID,
+            'due_date' => now()->addDays(7),
+            'issued_date' => now(),
+        ]);
+
+        // Send email notification
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\InvoiceCreated($invoice));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to send invoice email: ' . $e->getMessage());
+        }
+
+        return redirect()->route('pembayaran')->with('success', 'Invoice perpanjangan KTA berhasil dibuat. Silakan lakukan pembayaran.');
+    }
+
 }
