@@ -17,7 +17,7 @@
     <div>Status: {{ strtoupper($invoice->status) }}</div>
 </td>
 <td style="text-align:right;vertical-align:top">
-    @if($logo)
+    @if($logo && file_exists(public_path('storage/'.$logo)))
         <img class="logo" src="{{ public_path('storage/'.$logo) }}" alt="Logo">
     @else
         <div style="font-size:16px;font-weight:600">{{ config('app.name') }}</div>
@@ -44,7 +44,7 @@
 <div class="signature-box">
     <div style="margin-bottom:50px;">&nbsp;</div>
     <div><strong>{{ config('app.name') }}</strong></div>
-    @if($signature)
+    @if($signature && file_exists(public_path('storage/'.$signature)))
         <img src="{{ public_path('storage/'.$signature) }}" alt="Signature">
     @endif
 </div>
