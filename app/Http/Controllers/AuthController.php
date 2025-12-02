@@ -147,6 +147,7 @@ class AuthController extends Controller
             'bentuk' => $data['bentuk'],
             'jenis' => $data['jenis'],
             'kualifikasi' => $data['kualifikasi'],
+            'membership_type' => 'AB', // Default Anggota Biasa saat register
             'penanggung_jawab' => $data['penanggung_jawab'],
             'npwp' => $data['npwp'],
             'email' => $data['bu_email'],

@@ -67,6 +67,7 @@ class AdminCompanyController extends Controller
             'bentuk' => ['nullable','string','max:30'],
             'jenis' => ['nullable','string','max:30'],
             'kualifikasi' => ['nullable','string','max:30'],
+            'membership_type' => ['nullable','in:AB,ALB'],
             // penanggung_jawab will be taken from selected/created user
             'penanggung_jawab' => ['nullable','string','max:255'],
             'npwp' => ['nullable','string','max:32','unique:companies,npwp'],
@@ -150,6 +151,7 @@ class AdminCompanyController extends Controller
             'bentuk' => ['nullable','string','max:30'],
             'jenis' => ['nullable','string','max:30'],
             'kualifikasi' => ['nullable','string','max:30'],
+            'membership_type' => ['nullable','in:AB,ALB'],
             'npwp' => ['nullable','string','max:32', Rule::unique('companies','npwp')->ignore($company->id)],
             'email' => ['nullable','email','max:255'],
             'phone' => ['nullable','string','max:30'],
@@ -173,6 +175,11 @@ class AdminCompanyController extends Controller
         // Do not allow direct penanggung_jawab override via form; only via user reassignment
         unset($data['penanggung_jawab']);
 
+        // Check if membership_type or province_code is changing
+        $membershipTypeChanged = isset($data['membership_type']) && $data['membership_type'] !== $company->membership_type;
+        $provinceChanged = isset($data['province_code']) && $data['province_code'] !== $company->province_code;
+        $needsKtaRegeneration = $membershipTypeChanged || $provinceChanged;
+
         // Handle reassignment if a user is selected
         if($request->filled('existing_user_id')){
             $newUser = User::find($request->integer('existing_user_id'));
@@ -190,7 +197,16 @@ class AdminCompanyController extends Controller
         }
         $paths = $this->storeDocs($request, $company);
         $company->update(array_merge($data,$paths));
-        return back()->with('success','Perusahaan diperbarui');
+
+        // Regenerate KTA number if membership type or province changed
+        if($needsKtaRegeneration){
+            $user = $company->users()->first();
+            if($user){
+                $user->regenerateKtaNumber();
+            }
+        }
+
+        return back()->with('success','Perusahaan diperbarui' . ($needsKtaRegeneration ? ' dan nomor KTA diperbarui' : ''));
     }
 
     public function destroy(Company $company)

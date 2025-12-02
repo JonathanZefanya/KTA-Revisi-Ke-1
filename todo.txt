@@ -7,3 +7,9 @@
 7. Tambah list daftar anggota (anggota yang status aktif) dapat ditampilkan diluar halaman admin misal : kta.aabi.or.id/list_anggota Kolomnya : No, Nama PT, PJBU, Alamat, ada filter percarian (done)
 8. Perbaiki review KTA full dibuat mirip saat import dengan pdf (buat di kolom KTA lightmode) dan hapus review secara plain di bagian menu admin (baseurl/admin/kta) (done) 
 9. admin bisa menambahkan/upload template background baru KTA di menu settings paada bagian tab umum. jadi bisa diganti dan setelah upload ada preview template dan isi konten  di dalam KTA bisa di atur entah itu dikecil / besar, digeser serta di panjang atau pendekin (done)
+10. Tambah Status Anggota Biasa (AB) dan Anggota Luar Biasa (ALB) di companies 
+11. Di panel admin bagian perusahaan bisa mengedit Status Anggota user
+12. Revisi Penomoran KTA format di AABI, AA/BBB/CCC
+AA : ditentukan dari penomoran provinsi anggota
+BBB : nomor urut anggota berdasarkan di provinsi
+CCC : AB (Anggota Biasa)/ALB (Anggota Luar Biasa)
