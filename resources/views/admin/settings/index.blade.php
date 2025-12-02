@@ -558,16 +558,19 @@ let isDragging = false;
 let isResizing = false;
 let startX, startY, startLeft, startTop, startWidth, startHeight;
 
+// Konstanta konversi cm ke px (1cm ≈ 37.795px pada 96 DPI)
+const CM_TO_PX = 37.795;
+
 function openLayoutEditor() {
-    // Ensure config is an object
+    // Ensure config is an object with cm-based defaults for 29.7cm x 21.28cm
     if (!ktaLayoutConfig || typeof ktaLayoutConfig !== 'object' || Object.keys(ktaLayoutConfig).length === 0) {
         ktaLayoutConfig = {
-            member_box: {left: 50, top: 53, fontSize: 18},
-            title: {left: 460, top: 145, fontSize: 18},
-            meta: {left: 260, top: 190, width: 460, fontSize: 13, labelWidth: 180},
-            expiry: {left: 460, top: 450, fontSize: 12},
-            photo: {left: 262, top: 438, width: 95, height: 125},
-            qr: {right: 50, bottom: 20, width: 50, height: 50}
+            member_box: {left: 1.5, top: 1.8, fontSize: 16},
+            title: {left: 10.5, top: 4.5, fontSize: 16},
+            meta: {left: 7.5, top: 6.5, width: 14, fontSize: 12, labelWidth: 6},
+            expiry: {left: 10.5, top: 16.5, fontSize: 12},
+            photo: {left: 7.5, top: 16, width: 3.5, height: 4.5},
+            qr: {right: 1.5, bottom: 1.5, width: 3.5, height: 3.5}
         };
     }
     
@@ -760,53 +763,83 @@ function updatePositionInfo(elem) {
     const elemKey = elem.dataset.elem;
     const config = ktaLayoutConfig[elemKey] || {};
     
+    // Convert px to cm for display
+    const leftCm = (elem.offsetLeft / CM_TO_PX).toFixed(1);
+    const topCm = (elem.offsetTop / CM_TO_PX).toFixed(1);
+    const widthCm = (elem.offsetWidth / CM_TO_PX).toFixed(1);
+    const heightCm = (elem.offsetHeight / CM_TO_PX).toFixed(1);
+    
     const info = document.getElementById('position-info');
     info.innerHTML = `
         <strong>${getElementName(elemKey)}</strong><br>
         <small>
-        Left: ${elem.offsetLeft}px<br>
-        Top: ${elem.offsetTop}px<br>
-        Width: ${elem.offsetWidth}px<br>
-        Height: ${elem.offsetHeight}px
+        Left: ${leftCm} cm (${elem.offsetLeft}px)<br>
+        Top: ${topCm} cm (${elem.offsetTop}px)<br>
+        Width: ${widthCm} cm (${elem.offsetWidth}px)<br>
+        Height: ${heightCm} cm (${elem.offsetHeight}px)
         ${config.fontSize ? `<br>Font: ${config.fontSize}px` : ''}
         </small>
     `;
 }
 
 function applyConfigToElements() {
+    const canvas = document.getElementById('kta-canvas');
+    if (!canvas) return;
+    
+    const canvasWidth = canvas.offsetWidth; // 29.7cm dalam px
+    const canvasHeight = canvas.offsetHeight; // 21.28cm dalam px
+    
     Object.keys(ktaLayoutConfig).forEach(key => {
         const elem = document.getElementById('elem-' + key);
         if (!elem) return;
         
         const config = ktaLayoutConfig[key];
         
-        if (config.left !== undefined) elem.style.left = config.left + 'px';
-        if (config.top !== undefined) elem.style.top = config.top + 'px';
-        if (config.width !== undefined) elem.style.width = config.width + 'px';
-        if (config.height !== undefined) elem.style.height = config.height + 'px';
-        if (config.fontSize !== undefined) {
-            elem.querySelector('.elem-content').style.fontSize = config.fontSize + 'px';
+        // Special handling for QR code with right/bottom positioning
+        if (key === 'qr' && config.right !== undefined && config.bottom !== undefined) {
+            const rightPx = config.right * CM_TO_PX;
+            const bottomPx = config.bottom * CM_TO_PX;
+            const widthPx = (config.width || 3.5) * CM_TO_PX;
+            const heightPx = (config.height || 3.5) * CM_TO_PX;
+            
+            elem.style.left = (canvasWidth - rightPx - widthPx) + 'px';
+            elem.style.top = (canvasHeight - bottomPx - heightPx) + 'px';
+            elem.style.width = widthPx + 'px';
+            elem.style.height = heightPx + 'px';
+        } else {
+            // Normal left/top positioning for other elements
+            if (config.left !== undefined) {
+                elem.style.left = (config.left * CM_TO_PX) + 'px';
+            }
+            if (config.top !== undefined) {
+                elem.style.top = (config.top * CM_TO_PX) + 'px';
+            }
+            if (config.width !== undefined) {
+                elem.style.width = (config.width * CM_TO_PX) + 'px';
+            }
+            if (config.height !== undefined) {
+                elem.style.height = (config.height * CM_TO_PX) + 'px';
+            }
         }
         
-        // Handle right/bottom positioning for QR
-        if (key === 'qr' && config.right !== undefined) {
-            elem.style.left = (1200 - config.right - (config.width || 50)) + 'px';
-        }
-        if (key === 'qr' && config.bottom !== undefined) {
-            elem.style.top = (744 - config.bottom - (config.height || 50)) + 'px';
+        // Apply font size for text elements
+        if (config.fontSize !== undefined && elem.querySelector('.elem-content')) {
+            elem.querySelector('.elem-content').style.fontSize = config.fontSize + 'px';
         }
     });
+    
+    console.log('Applied config to elements:', ktaLayoutConfig);
 }
 
 function resetLayout() {
     if (confirm('Reset semua elemen ke posisi default?')) {
         ktaLayoutConfig = {
-            member_box: {left: 50, top: 53, fontSize: 18},
-            title: {left: 460, top: 145, fontSize: 18},
-            meta: {left: 260, top: 190, width: 460, fontSize: 13, labelWidth: 180},
-            expiry: {left: 460, top: 450, fontSize: 12},
-            photo: {left: 262, top: 438, width: 95, height: 125},
-            qr: {right: 50, bottom: 20, width: 50, height: 50}
+            member_box: {left: 1.5, top: 1.8, fontSize: 16},
+            title: {left: 10.5, top: 4.5, fontSize: 16},
+            meta: {left: 7.5, top: 6.5, width: 14, fontSize: 12, labelWidth: 6},
+            expiry: {left: 10.5, top: 16.5, fontSize: 12},
+            photo: {left: 7.5, top: 16, width: 3.5, height: 4.5},
+            qr: {right: 1.5, bottom: 1.5, width: 3.5, height: 3.5}
         };
         applyConfigToElements();
     }
@@ -879,6 +912,9 @@ function updateLayoutConfig() {
     const canvas = document.getElementById('kta-canvas');
     if (!canvas) return;
     
+    const canvasWidth = canvas.offsetWidth; // 29.7cm dalam px
+    const canvasHeight = canvas.offsetHeight; // 21.28cm dalam px
+    
     const elements = canvas.querySelectorAll('.draggable-elem');
     
     elements.forEach(elem => {
@@ -889,22 +925,32 @@ function updateLayoutConfig() {
         
         const config = ktaLayoutConfig[elemKey];
         
-        // Update position
-        config.left = elem.offsetLeft;
-        config.top = elem.offsetTop;
-        
-        // Update size if applicable
-        if (elem.offsetWidth) config.width = elem.offsetWidth;
-        if (elem.offsetHeight) config.height = elem.offsetHeight;
-        
-        // For QR code, maintain right/bottom positioning
+        // For QR code, use right/bottom positioning
         if (elemKey === 'qr') {
-            config.right = 1200 - elem.offsetLeft - elem.offsetWidth;
-            config.bottom = 744 - elem.offsetTop - elem.offsetHeight;
+            config.right = Math.round(((canvasWidth - elem.offsetLeft - elem.offsetWidth) / CM_TO_PX) * 10) / 10;
+            config.bottom = Math.round(((canvasHeight - elem.offsetTop - elem.offsetHeight) / CM_TO_PX) * 10) / 10;
+            config.width = Math.round((elem.offsetWidth / CM_TO_PX) * 10) / 10;
+            config.height = Math.round((elem.offsetHeight / CM_TO_PX) * 10) / 10;
+            
+            // Remove left/top if exists to avoid confusion
+            delete config.left;
+            delete config.top;
+        } else {
+            // For other elements, use left/top positioning
+            config.left = Math.round((elem.offsetLeft / CM_TO_PX) * 10) / 10;
+            config.top = Math.round((elem.offsetTop / CM_TO_PX) * 10) / 10;
+            
+            // Update size if applicable
+            if (elem.offsetWidth) {
+                config.width = Math.round((elem.offsetWidth / CM_TO_PX) * 10) / 10;
+            }
+            if (elem.offsetHeight) {
+                config.height = Math.round((elem.offsetHeight / CM_TO_PX) * 10) / 10;
+            }
         }
     });
     
-    console.log('Updated config before save:', ktaLayoutConfig);
+    console.log('Updated config before save (in cm):', ktaLayoutConfig);
 }
 </script>
 @endpush
@@ -921,26 +967,26 @@ function updateLayoutConfig() {
                 <div class="d-flex h-100">
                     <!-- Canvas Area -->
                     <div class="flex-grow-1 position-relative" style="overflow:auto;background:#2a2f3e">
-                        <div class="d-flex align-items-center justify-content-center" style="min-height:100%;padding:1rem">
-                            <div id="kta-canvas-wrapper" style="position:relative;width:100%;max-width:1200px">
-                                <div id="kta-canvas" style="position:relative;width:100%;padding-bottom:62%;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.5);border-radius:8px;overflow:hidden">
+                        <div class="d-flex align-items-center justify-content-center" style="min-height:100%;padding:2rem">
+                            <div id="kta-canvas-wrapper" style="position:relative;width:29.7cm;max-width:100%">
+                                <div id="kta-canvas" style="position:relative;width:29.7cm;height:21.28cm;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.5);border-radius:8px;overflow:hidden">
                                     <!-- Template background will be loaded here -->
-                                    <img id="canvas-bg" src="" alt="Template" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none">
+                                    <img id="canvas-bg" src="" alt="Template" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none">
                                     
                                     <!-- Draggable Elements -->
                                     <div style="position:absolute;top:0;left:0;width:100%;height:100%">
                                         <div id="elem-member_box" class="draggable-elem" data-elem="member_box">
-                                            <div class="elem-content">13/028/AB</div>
+                                            <div class="elem-content" style="color:#000">13/028/AB</div>
                                             <div class="resize-handle"></div>
                                         </div>
                                         
                                         <div id="elem-title" class="draggable-elem" data-elem="title">
-                                            <div class="elem-content">KARTU TANDA ANGGOTA</div>
+                                            <div class="elem-content" style="color:#000">KARTU TANDA ANGGOTA</div>
                                             <div class="resize-handle"></div>
                                         </div>
                                         
                                         <div id="elem-meta" class="draggable-elem draggable-box" data-elem="meta">
-                                            <div class="elem-content" style="font-size:12px;line-height:1.4">
+                                            <div class="elem-content" style="font-size:12px;line-height:1.4;color:#000">
                                                 <strong>NAMA PERUSAHAAN:</strong> PT CONTOH<br>
                                                 <strong>NAMA PIMPINAN:</strong> John Doe<br>
                                                 <strong>NO. NPWP:</strong> 12.345.678.9-012.000
@@ -949,19 +995,19 @@ function updateLayoutConfig() {
                                         </div>
                                         
                                         <div id="elem-expiry" class="draggable-elem" data-elem="expiry">
-                                            <div class="elem-content">BERLAKU SAMPAI 31 DESEMBER 2025</div>
+                                            <div class="elem-content" style="color:#000">BERLAKU SAMPAI DENGAN TANGGAL 31 DESEMBER 2025</div>
                                             <div class="resize-handle"></div>
                                         </div>
                                         
-                                        <div id="elem-photo" class="draggable-elem draggable-box" data-elem="photo" style="background:#eee;border:2px solid #000">
+                                        <div id="elem-photo" class="draggable-elem draggable-box" data-elem="photo" style="background:#eee;border:1px solid #999">
                                             <div class="elem-content" style="display:flex;align-items:center;justify-content:center;height:100%;font-size:10px;color:#666">
                                                 <i class="bi bi-person" style="font-size:40px"></i>
                                             </div>
                                             <div class="resize-handle"></div>
                                         </div>
                                         
-                                        <div id="elem-qr" class="draggable-elem draggable-box" data-elem="qr" style="background:#fff;border:1px solid #000">
-                                            <div class="elem-content" style="display:flex;align-items:center;justify-content:center;height:100%">
+                                        <div id="elem-qr" class="draggable-elem draggable-box" data-elem="qr" style="background:#fff;border:1px solid #999">
+                                            <div class="elem-content" style="display:flex;align-items:center;justify-content:center;height:100%;color:#000">
                                                 <i class="bi bi-qr-code" style="font-size:30px"></i>
                                             </div>
                                             <div class="resize-handle"></div>
@@ -1036,27 +1082,27 @@ function updateLayoutConfig() {
     z-index: 10;
 }
 .draggable-elem:hover {
-    box-shadow: 0 0 0 2px #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
 }
 .draggable-elem.selected {
-    box-shadow: 0 0 0 3px #ef4444 !important;
+    box-shadow: 0 0 0 1px #ef4444 !important;
 }
 .draggable-elem .elem-content {
     pointer-events: none;
     font-weight: 700;
 }
 .draggable-box {
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(59, 130, 246, 0.05);
     border: 1px dashed #3b82f6;
 }
 .resize-handle {
     position: absolute;
     right: -4px;
     bottom: -4px;
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     background: #3b82f6;
-    border: 2px solid #fff;
+    border: 1px solid #fff;
     border-radius: 50%;
     cursor: nwse-resize;
     display: none;
