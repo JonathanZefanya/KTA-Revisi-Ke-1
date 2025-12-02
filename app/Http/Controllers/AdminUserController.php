@@ -20,7 +20,7 @@ class AdminUserController extends Controller
     {
         $q = trim($request->get('q', ''));
         $status = $request->get('status'); // approved / pending
-    $users = User::with(['companies'])
+        $users = User::with(['companies'])
             ->when($q, function($query) use ($q){
                 $query->where(function($w) use ($q){
                     $w->where('name','like',"%$q%")
