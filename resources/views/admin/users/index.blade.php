@@ -81,11 +81,27 @@
                 <option value="approved" @selected($status==='approved')>Approved</option>
             </select>
         </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small text-dim mb-1">Bulan Berakhir</label>
+            <input type="month" name="bulan_berakhir" 
+                value="{{ $bulanBerakhir }}" 
+                class="form-control form-control-sm bg-dark border-secondary text-light">
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small text-dim mb-1">Status KTA</label>
+            <select name="kta_status" class="form-select form-select-sm bg-dark border-secondary text-light">
+                <option value="">Semua</option>
+                <option value="1" @selected($ktaStatus==='1')>Aktif</option>
+                <option value="0" @selected($ktaStatus==='0')>Tidak Aktif</option>
+            </select>
+        </div>
+
         <div class="col-lg-7 col-md-12">
             <div class="action-toolbar">
                 <button class="btn btn-sm btn-primary"><i class="bi bi-funnel-fill me-1"></i>Filter</button>
                 <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-clockwise me-1"></i>Reset</a>
-                <a href="{{ route('admin.users.export', request()->only(['q', 'status'])) }}" class="btn btn-sm btn-success">
+                <a href="{{ route('admin.users.export', request()->only(['q', 'status', 'bulan_berakhir', 'kta_status'])) }}" class="btn btn-sm btn-success">
                     <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
                 </a>
                 <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-outline-primary ms-auto"><i class="bi bi-plus-circle me-1"></i>Tambah User</a>

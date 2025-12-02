@@ -20,6 +20,8 @@ class AdminUserController extends Controller
     {
         $q = trim($request->get('q', ''));
         $status = $request->get('status'); // approved / pending
+        $bulanBerakhir = $request->get('bulan_berakhir'); // format YYYY-MM
+        $ktaStatus = $request->get('kta_status'); // 1=aktif, 0=tidak aktif
         $users = User::with(['companies'])
             ->when($q, function($query) use ($q){
                 $query->where(function($w) use ($q){
@@ -31,11 +33,19 @@ class AdminUserController extends Controller
             })
             ->when($status === 'approved', fn($q2)=>$q2->whereNotNull('approved_at'))
             ->when($status === 'pending', fn($q2)=>$q2->whereNull('approved_at'))
+            ->when($bulanBerakhir, function($q) use ($bulanBerakhir){
+            // format input di FE: YYYY-MM
+            $q->whereYear('membership_card_expires_at', substr($bulanBerakhir, 0, 4))
+              ->whereMonth('membership_card_expires_at', substr($bulanBerakhir, 5, 2));
+            })
+            ->when(isset($ktaStatus), function($q) use ($ktaStatus){
+                $q->where('is_active', $ktaStatus);
+            })
             ->latest()
             ->paginate(25)
             ->withQueryString();
 
-        return view('admin.users.index', compact('users','q','status'));
+        return view('admin.users.index', compact('users','q','status', 'bulanBerakhir', 'ktaStatus'));
     }
 
     public function create()
@@ -286,7 +296,8 @@ class AdminUserController extends Controller
     {
         $q = trim($request->get('q', ''));
         $status = $request->get('status');
-        
+        $bulanBerakhir = $request->get('bulan_berakhir'); // format YYYY-MM
+        $ktaStatus = $request->get('kta_status'); // 1=aktif, 0=tidak aktif
         $query = User::with(['companies'])
             ->when($q, function($query) use ($q){
                 $query->where(function($w) use ($q){
@@ -297,6 +308,14 @@ class AdminUserController extends Controller
             })
             ->when($status === 'approved', fn($q2)=>$q2->whereNotNull('approved_at'))
             ->when($status === 'pending', fn($q2)=>$q2->whereNull('approved_at'))
+            ->when($bulanBerakhir, function($q) use ($bulanBerakhir){
+            // format input di FE: YYYY-MM
+            $q->whereYear('membership_card_expires_at', substr($bulanBerakhir, 0, 4))
+              ->whereMonth('membership_card_expires_at', substr($bulanBerakhir, 5, 2));
+            })
+            ->when(isset($ktaStatus), function($q) use ($ktaStatus){
+                $q->where('is_active', $ktaStatus);
+            })
             ->latest();
 
         $filename = 'data-users-' . date('Y-m-d-His') . '.xlsx';
