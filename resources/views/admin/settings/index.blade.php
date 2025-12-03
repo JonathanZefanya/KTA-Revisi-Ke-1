@@ -814,11 +814,18 @@ function applyConfigToElements() {
             if (config.top !== undefined) {
                 elem.style.top = (config.top * CM_TO_PX) + 'px';
             }
-            if (config.width !== undefined) {
-                elem.style.width = (config.width * CM_TO_PX) + 'px';
+            // Only set width/height for photo element (resizable)
+            if (key === 'photo') {
+                if (config.width !== undefined) {
+                    elem.style.width = (config.width * CM_TO_PX) + 'px';
+                }
+                if (config.height !== undefined) {
+                    elem.style.height = (config.height * CM_TO_PX) + 'px';
+                }
             }
-            if (config.height !== undefined) {
-                elem.style.height = (config.height * CM_TO_PX) + 'px';
+            // For meta, only set width (let height adjust to content)
+            if (key === 'meta' && config.width !== undefined) {
+                elem.style.width = (config.width * CM_TO_PX) + 'px';
             }
         }
         
@@ -986,10 +993,24 @@ function updateLayoutConfig() {
                                         </div>
                                         
                                         <div id="elem-meta" class="draggable-elem draggable-box" data-elem="meta">
-                                            <div class="elem-content" style="font-size:12px;line-height:1.4;color:#000">
-                                                <strong>NAMA PERUSAHAAN:</strong> PT CONTOH<br>
-                                                <strong>NAMA PIMPINAN:</strong> John Doe<br>
-                                                <strong>NO. NPWP:</strong> 12.345.678.9-012.000
+                                            <div class="elem-content" style="font-size:12px;line-height:1.4;color:#000;font-weight:400;">
+                                                <table style="border-collapse:collapse;width:100%;border:none;">
+                                                    <tr>
+                                                        <td style="font-weight:700;padding:0.2cm 0.15cm;vertical-align:top;">NAMA PERUSAHAAN</td>
+                                                        <td style="width:0.3cm;text-align:center;padding:0.2cm 0.1cm;">:</td>
+                                                        <td style="padding:0.2cm 0.15cm;vertical-align:top;">TESTa</td>
+                                                    </tr>
+                                                    <tr>    
+                                                        <td style="font-weight:700;padding:0.2cm 0.15cm;vertical-align:top;">NAMA PIMPINAN</td>
+                                                        <td style="width:0.3cm;text-align:center;padding:0.2cm 0.1cm;">:</td>
+                                                        <td style="padding:0.2cm 0.15cm;vertical-align:top;">123421</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="font-weight:700;padding:0.2cm 0.15cm;vertical-align:top;">NO. NPWP</td>
+                                                        <td style="width:0.3cm;text-align:center;padding:0.2cm 0.1cm;">:</td>
+                                                        <td style="padding:0.2cm 0.15cm;vertical-align:top;">1234567</td>
+                                                    </tr>
+                                                </table>
                                             </div>
                                             <div class="resize-handle"></div>
                                         </div>
@@ -1077,7 +1098,6 @@ function updateLayoutConfig() {
     position: absolute;
     cursor: move;
     user-select: none;
-    padding: 4px 8px;
     transition: box-shadow 0.2s;
     z-index: 10;
 }
@@ -1090,6 +1110,12 @@ function updateLayoutConfig() {
 .draggable-elem .elem-content {
     pointer-events: none;
     font-weight: 700;
+}
+.draggable-elem .elem-content table {
+    border: none !important;
+}
+.draggable-elem .elem-content table td {
+    border: none !important;
 }
 .draggable-box {
     background: rgba(59, 130, 246, 0.05);

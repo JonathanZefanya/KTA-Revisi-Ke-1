@@ -244,7 +244,7 @@
                     <td>ALAMAT PERUSAHAAN</td>
                     <td>:</td>
                     <td>{{ $company->address ?? '-' }}<br>
-                        Kab./Kota: {{ $company->city_name ?? '-' }}, Provinsi: {{ $company->province_name ?? '-' }}<br>
+                        {{ $company->city_name ?? 'Kab/Kota: -' }}, Provinsi: {{ $company->province_name ?? '-' }}<br>
                         <b>No. Telp:</b> {{ $company->phone ?? '-' }}, <b>Email:</b> {{ $company->email ?? '-' }}
                     </td>
                 </tr>
