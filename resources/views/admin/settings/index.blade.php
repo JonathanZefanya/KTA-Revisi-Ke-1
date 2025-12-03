@@ -562,15 +562,15 @@ let startX, startY, startLeft, startTop, startWidth, startHeight;
 const CM_TO_PX = 37.795;
 
 function openLayoutEditor() {
-    // Ensure config is an object with cm-based defaults for 29.7cm x 21.28cm
+    // Ensure config is an object with cm-based defaults for 29.7cm x 21.28cm (matching PDF defaults)
     if (!ktaLayoutConfig || typeof ktaLayoutConfig !== 'object' || Object.keys(ktaLayoutConfig).length === 0) {
         ktaLayoutConfig = {
-            member_box: {left: 1.5, top: 1.8, fontSize: 16},
-            title: {left: 10.5, top: 4.5, fontSize: 16},
-            meta: {left: 7.5, top: 6.5, width: 14, fontSize: 12, labelWidth: 6},
-            expiry: {left: 10.5, top: 16.5, fontSize: 12},
-            photo: {left: 7.5, top: 16, width: 3.5, height: 4.5},
-            qr: {right: 1.5, bottom: 1.5, width: 3.5, height: 3.5}
+            member_box: {left: 1.3, top: 1.2, fontSize: 14},
+            title: {left: 11.5, top: 4.2, fontSize: 16},
+            meta: {left: 7.5, top: 6.5, width: 16, fontSize: 12, labelWidth: 6},
+            expiry: {left: 10.5, top: 15.8, fontSize: 11},
+            photo: {left: 7.3, top: 14.5, width: 3.5, height: 4.8},
+            qr: {right: 1, bottom: 1.8, width: 3.5, height: 3.5}
         };
     }
     
@@ -841,12 +841,12 @@ function applyConfigToElements() {
 function resetLayout() {
     if (confirm('Reset semua elemen ke posisi default?')) {
         ktaLayoutConfig = {
-            member_box: {left: 1.5, top: 1.8, fontSize: 16},
-            title: {left: 10.5, top: 4.5, fontSize: 16},
-            meta: {left: 7.5, top: 6.5, width: 14, fontSize: 12, labelWidth: 6},
-            expiry: {left: 10.5, top: 16.5, fontSize: 12},
-            photo: {left: 7.5, top: 16, width: 3.5, height: 4.5},
-            qr: {right: 1.5, bottom: 1.5, width: 3.5, height: 3.5}
+            member_box: {left: 1.3, top: 1.2, fontSize: 14},
+            title: {left: 11.5, top: 4.2, fontSize: 16},
+            meta: {left: 7.5, top: 6.5, width: 16, fontSize: 12, labelWidth: 6},
+            expiry: {left: 10.5, top: 15.8, fontSize: 11},
+            photo: {left: 7.3, top: 14.5, width: 3.5, height: 4.8},
+            qr: {right: 1, bottom: 1.8, width: 3.5, height: 3.5}
         };
         applyConfigToElements();
     }
